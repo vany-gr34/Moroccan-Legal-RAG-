@@ -1,0 +1,6 @@
+{
+  "name": "Legal Morocco",
+  "description": "Moroccan Legal RAG UI/UX Design Blueprint",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

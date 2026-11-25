@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Amiri", ui-serif, Georgia, serif;
+
+  --color-primary: #1A237E;
+
+  --color-sandstone: #F5F0E8;
+  --color-sandstone-alt: #EDE7DD;
+  --color-sandstone-border: #DCD3C1;
+
+  --color-success: #2E7D32;
+
+  /* ── Surface layers ── */
+  --color-surface-0: #F5F0E8;
+  --color-surface-1: #FFFFFF;
+  --color-surface-2: #F0EBE1;
+  --color-surface-3: #EAE3D6;
+
+  /* ── Domain colors ── */
+  --color-domain-criminal: #b91c1c;
+  --color-domain-family: #7c3aed;
+  --color-domain-civil: #0369a1;
+  --color-domain-commercial: #0f766e;
+  --color-domain-traffic: #b45309;
+  --color-domain-procedure: #475569;
+  --color-domain-violations: #b91c1c;
+  --color-domain-all: #1A237E;
+}
+
+@layer base {
+
+  /*
+   * ── Typography scale ──
+   * Use these variables in component styles for consistent sizing.
+   */
+  :root {
+    --text-xs: 0.7rem;
+    --text-sm: 0.8rem;
+    --text-base: 0.9rem;
+    --text-md: 1rem;
+    --text-lg: 1.15rem;
+    --text-xl: 1.4rem;
+    --text-2xl: 1.8rem;
+    --text-3xl: 2.4rem;
+
+    --lh-tight: 1.1;
+    --lh-body: 1.65;
+    --lh-compact: 1;
+  }
+
+  body {
+    @apply font-sans antialiased bg-sandstone text-primary;
+    line-height: var(--lh-body);
+  }
+
+  /*
+   * Heading & label defaults
+   */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: var(--lh-tight);
+  }
+
+  label,
+  .chip,
+  .badge,
+  button,
+  .btn {
+    line-height: var(--lh-compact);
+  }
+
+  /*
+   * Focus — never remove, always visible
+   */
+  :focus-visible {
+    outline: 2px solid #1A237E;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /*
+   * Prevent accidental text selection on interactive elements
+   */
+  button,
+  a,
+  nav,
+  label,
+  [role="button"],
+  [role="menuitem"],
+  [role="tab"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* @plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography'; */
