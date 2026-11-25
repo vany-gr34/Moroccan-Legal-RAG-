@@ -1,0 +1,71 @@
+% =============================================================================
+% Title Block (spans both columns via \twocolumn[...])
+% =============================================================================
+
+\twocolumn[{
+\begin{flushleft}
+
+{\small
+Department of Computer Engineering\\
+Faculty of Sciences and Techniques Tangier\\
+Abdelmalek Essaadi University, Morocco\\
+2025/2026\par
+}
+
+\vspace{2.5em}
+
+{\color{titleblue}\Huge\bfseries
+Système de Question-Réponse Juridique Marocain\\[0.2em]
+Basé sur le Retrieval-Augmented Generation (RAG)\\[0.2em]
+avec Traitement du Langage Naturel Arabe\par
+}
+
+\vspace{1.5em}
+
+{\large\bfseries
+Encadré par : Pr. BENABDELOUAHAB Ikram\\[0.8em]
+Réalisé par : ZARQI Ezzoubair, EL ATTAR Mohamed, EL GHARIB Mahmoud, HAMDAN
+Kaouthar ET AMAMI Yousra\par
+}
+
+
+\end{flushleft}
+
+\vspace{1.5em}
+
+% Abstract
+\begin{leftbar}
+\textbf{\textcolor{headingblue}{RÉSUMÉ}} Cet article présente la conception,
+l'implémentation et l'évaluation d'un système de Question-Réponse (Q\&R)
+juridique spécialisé dans le droit marocain, basé sur l'architecture
+Retrieval-Augmented Generation (RAG). Le système intègre une chaîne complète
+de traitement du langage naturel arabe incluant l'extraction de texte à partir
+de documents PDF (numériques et scannés), le nettoyage, la normalisation
+arabe, l'analyse structurelle des articles de loi, et l'indexation vectorielle
+via PostgreSQL avec l'extension pgvector. La recherche hybride combine la
+similarité cosinus dense (modèle \texttt{BAAI/bge-m3}, 1024 dimensions) avec
+la recherche lexicale BM25, fusionnée par Reciprocal Rank Fusion (RRF).
+Le module de génération s'appuie sur le modèle Gemma 4 2B (Google), servi
+sur GPU via Google Colab et accessible par tunnel Cloudflare. Les benchmarks
+montrent que la stratégie RRF atteint un Hit@5 de 68,75\% et un Recall@5 de
+59,38\%, tandis que la recherche dense offre le meilleur MRR@5 (0,565).
+L'évaluation des modèles d'embedding démontre la supériorité des modèles
+1024 dimensions (\texttt{intfloat/multilingual-e5-large}, \texttt{BAAI/bge-m3})
+pour le domaine juridique arabe, avec une précision de domaine atteignant
+89\%. Ce travail constitue la première plateforme open-source complète de
+RAG juridique marocain, couvrant six domaines de droit (pénal, trafic,
+familial, civil, commercial, procédures).
+\end{leftbar}
+
+\vspace{1em}
+
+% Keywords
+\begin{leftbar}
+\textbf{\textcolor{headingblue}{MOTS-CLÉS}} RAG, NLP Arabe, Droit Marocain,
+Recherche Hybride, Embeddings Multilingues, pgvector, Gemma 4,
+Question-Réponse Juridique, Reciprocal Rank Fusion.
+\end{leftbar}
+
+\vspace{2.5em}
+
+}]

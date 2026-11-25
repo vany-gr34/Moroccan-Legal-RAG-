@@ -1,0 +1,4 @@
+strategy,precision@k,recall@k,mrr@k,ndcg@k,hit@k,answer_relevance,faithfulness,answer_correctness
+bm25,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+dense,0.1562,0.5677,0.5651,0.5665,0.6562,0.422,0.2213,0.2647
+rrf,0.1562,0.5938,0.4583,0.4744,0.6875,0.4047,0.2185,0.2519

@@ -1,0 +1,509 @@
+% !TEX program = xelatex % (can also use "lualatex") 
+\documentclass[12pt,a4paper]{report}
+
+% ==========================================
+% PACKAGES ESSENTIELS
+% ==========================================
+% NOTE: inputenc and fontenc are NOT used with XeLaTeX/LuaLaTeX
+% fontspec must come before polyglossia
+\usepackage{fontspec}
+% ---- Main Latin font: Times New Roman ----
+% mathpazo is intentionally removed — it overrides setmainfont in XeLaTeX
+\setmainfont{Times New Roman}[
+    BoldFont       = {Times New Roman Bold},
+    ItalicFont     = {Times New Roman Italic},
+    BoldItalicFont = {Times New Roman Bold Italic}
+]
+% ---- Monospaced font that supports Arabic ----
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]   % <-- FIX ADDED HERE
+% ---- Arabic font — only active inside \begin{Arabic}...\end{Arabic} ----
+\usepackage{polyglossia}
+\setmainlanguage{french}
+\setotherlanguage[numerals=maghrebi]{arabic}
+\newfontfamily\arabicfont[
+    Script=Arabic,
+    Scale=1.15,
+    RightToLeft
+]{Amiri}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{fontawesome5}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning, calc, decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{soul}
+\usepackage{pifont}
+\usepackage{tabularx}
+\usepackage{adjustbox} % add this to your preamble if not already there
+
+% ==========================================
+% PALETTE DE COULEURS - Moroccan Legal RAG
+% ==========================================
+\definecolor{PrimaryBlue}{RGB}{15, 52, 96}
+\definecolor{AccentBlue}{RGB}{52, 120, 246}
+\definecolor{LightBlue}{RGB}{235, 243, 255}
+\definecolor{DarkGray}{RGB}{45, 45, 55}
+\definecolor{MidGray}{RGB}{110, 110, 125}
+\definecolor{LightGray}{RGB}{245, 246, 250}
+\definecolor{BorderGray}{RGB}{220, 222, 230}
+\definecolor{Sandstone}{RGB}{245, 240, 232}
+\definecolor{OliveGreen}{RGB}{46, 125, 50}
+
+% Couleurs semantiques
+\definecolor{InfoBlue}{RGB}{0, 122, 204}
+\definecolor{InfoBlueBg}{RGB}{232, 244, 255}
+\definecolor{InfoBlueBorder}{RGB}{144, 202, 249}
+
+\definecolor{SuccessGreen}{RGB}{22, 128, 72}
+\definecolor{SuccessGreenBg}{RGB}{232, 250, 240}
+\definecolor{SuccessGreenBorder}{RGB}{134, 210, 172}
+
+\definecolor{WarningAmber}{RGB}{160, 100, 0}
+\definecolor{WarningAmberBg}{RGB}{255, 248, 230}
+\definecolor{WarningAmberBorder}{RGB}{245, 200, 120}
+
+\definecolor{DangerRed}{RGB}{185, 28, 28}
+\definecolor{DangerRedBg}{RGB}{255, 235, 235}
+\definecolor{DangerRedBorder}{RGB}{240, 150, 150}
+
+\definecolor{TipPurple}{RGB}{90, 40, 180}
+\definecolor{TipPurpleBg}{RGB}{245, 238, 255}
+\definecolor{TipPurpleBorder}{RGB}{195, 165, 245}
+
+% Code couleurs
+\definecolor{CodeBg}{RGB}{250, 251, 253}
+\definecolor{CodeComment}{RGB}{100, 160, 100}
+\definecolor{CodeKeyword}{RGB}{0, 80, 200}
+\definecolor{CodeString}{RGB}{180, 30, 30}
+\definecolor{CodeNumber}{RGB}{140, 60, 180}
+\definecolor{CodeLineNo}{RGB}{170, 172, 185}
+\definecolor{CodeBorder}{RGB}{200, 210, 230}
+
+
+% ---- JSON block that supports Arabic natively ----
+\newtcolorbox{jsonblock}[1]{
+    enhanced,
+    colback=CodeBg,
+    colframe=CodeBorder,
+    arc=4pt,
+    boxrule=0.6pt,
+    title={\faCode\enspace\texttt{\sffamily\small #1}},
+    coltitle=PrimaryBlue,
+    fonttitle=\bfseries\small,
+    attach boxed title to top left={yshift=-2.5mm, xshift=8mm},
+    boxed title style={colback=LightGray, colframe=CodeBorder, arc=3pt, boxrule=0.5pt},
+    top=8pt,
+    fontupper=\ttfamily\small,
+}
+% ==========================================
+% CONFIGURATION DU DOCUMENT
+% ==========================================
+\geometry{top=2.8cm, bottom=2.8cm, left=2.8cm, right=2.5cm, marginparwidth=0cm}
+\setstretch{1.2}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=AccentBlue,
+    filecolor=AccentBlue,
+    urlcolor=AccentBlue,
+    pdftitle={Moroccan Legal RAG - Systeme de Recherche Juridique Intelligent},
+    pdfauthor={Equipe Moroccan Legal RAG},
+    bookmarksnumbered=true,
+    pdfpagemode=UseOutlines
+}
+
+% ==========================================
+% TITRES ET SECTIONS
+% ==========================================
+\titleformat{\chapter}[display]
+  {\color{PrimaryBlue}\normalfont\Huge\bfseries}
+  {\color{AccentBlue}\small\bfseries\sffamily CHAPITRE \thechapter}
+  {4pt}
+  {
+    \rule{\textwidth}{1.5pt}\vspace{6pt}
+    \begin{minipage}{\textwidth}
+      \raggedright\color{PrimaryBlue}
+  }
+  [
+    \end{minipage}
+    \vspace{4pt}\rule{\textwidth}{0.4pt}
+  ]
+\titlespacing*{\chapter}{0pt}{0pt}{28pt}
+
+\titleformat{\section}
+  {\color{PrimaryBlue}\normalfont\Large\bfseries}
+  {\color{AccentBlue}\thesection}{1em}{}
+  [\color{BorderGray}\titlerule]
+\titlespacing*{\section}{0pt}{20pt}{10pt}
+
+\titleformat{\subsection}
+  {\color{PrimaryBlue}\normalfont\large\bfseries}
+  {\color{AccentBlue}\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+
+% ==========================================
+% EN-TETES ET PIEDS DE PAGE
+% ==========================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{%
+  \textcolor{MidGray}{\small\sffamily Moroccan Legal RAG --- Systeme de Recherche Juridique}%
+}
+\fancyhead[R]{%
+  \textcolor{MidGray}{\small\sffamily\thepage}%
+}
+\fancyfoot[L]{\textcolor{MidGray}{\scriptsize\sffamily Module: NLP --- 2025/2026}}
+\fancyfoot[C]{\textcolor{MidGray}{\scriptsize\sffamily Universite Abdelmalek Essaadi --- FST Tanger}}
+\fancyfoot[R]{\textcolor{MidGray}{\scriptsize\sffamily Departement d'Informatique}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{BorderGray}\leaders\hrule height\headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{BorderGray}\leaders\hrule height\footrulewidth\hfill}}
+
+% ==========================================
+% STYLE CODE SOURCE
+% ==========================================
+\lstdefinestyle{PythonCode}{
+    language=Python,
+    escapeinside={(*}{*)}, 
+    backgroundcolor=\color{CodeBg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{CodeKeyword}\bfseries,
+    stringstyle=\color{CodeString},
+    commentstyle=\color{CodeComment}\itshape,
+    numberstyle=\tiny\color{CodeLineNo},
+    numbers=left,
+    numbersep=12pt,
+    stepnumber=1,
+    tabsize=4,
+    showspaces=false,
+    showstringspaces=false,
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=none,
+    xleftmargin=20pt,
+    xrightmargin=8pt,
+}
+
+\newtcblisting{codeblock}[2][]{
+    enhanced,
+    listing only,
+    listing style=PythonCode,
+    colback=CodeBg,
+    colframe=CodeBorder,
+    arc=4pt,
+    boxrule=0.6pt,
+    title={\faCode\enspace\texttt{\sffamily\small #2}},
+    coltitle=PrimaryBlue,
+    fonttitle=\bfseries\small,
+    attach boxed title to top left={yshift=-2.5mm, xshift=8mm},
+    boxed title style={colback=LightGray, colframe=CodeBorder, arc=3pt, boxrule=0.5pt},
+    top=8pt,
+    #1
+}
+
+% ==========================================
+% CARTES SEMANTIQUES
+% ==========================================
+\newtcolorbox{cardinfo}[1][]{
+    enhanced, breakable,
+    colback=InfoBlueBg, colframe=InfoBlueBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[InfoBlue] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt, yshift=0pt]frame.west) {\faInfoCircle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{InfoBlue}{\sffamily Information}}\par\smallskip},
+    #1
+}
+
+\newtcolorbox{cardsuccess}[1][]{
+    enhanced, breakable,
+    colback=SuccessGreenBg, colframe=SuccessGreenBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[SuccessGreen] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faCheckCircle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{SuccessGreen}{\sffamily Succes}}\par\smallskip},
+    #1
+}
+
+\newtcolorbox{cardwarning}[1][]{
+    enhanced, breakable,
+    colback=WarningAmberBg, colframe=WarningAmberBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[WarningAmber] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faExclamationTriangle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{WarningAmber}{\sffamily Avertissement}}\par\smallskip},
+    #1
+}
+
+\newtcolorbox{carddanger}[1][]{
+    enhanced, breakable,
+    colback=DangerRedBg, colframe=DangerRedBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[DangerRed] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faTimesCircle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{DangerRed}{\sffamily Danger / Erreur}}\par\smallskip},
+    #1
+}
+
+\newtcolorbox{cardtip}[1][]{
+    enhanced, breakable,
+    colback=TipPurpleBg, colframe=TipPurpleBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[TipPurple] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faLightbulb};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{TipPurple}{\sffamily Astuce}}\par\smallskip},
+    #1
+}
+
+% ==========================================
+% LEGENDES
+% ==========================================
+\captionsetup{
+    font=small,
+    labelfont={bf, color=PrimaryBlue},
+    labelsep=period,
+    skip=6pt
+}
+
+% ==========================================
+% LISTES PERSONNALISEES
+% ==========================================
+\setlist[itemize,1]{
+    label=\textcolor{AccentBlue}{\small\faChevronRight},
+    leftmargin=1.5em,
+    itemsep=3pt
+}
+\setlist[enumerate,1]{
+    label=\textcolor{AccentBlue}{\bfseries\arabic*.},
+    leftmargin=1.8em,
+    itemsep=3pt
+}
+
+% ==========================================
+%   DOCUMENT
+% ==========================================
+\begin{document}
+\begin{titlepage}
+    \newcommand{\HRule}{\textcolor{PrimaryBlue}{\rule{\linewidth}{0.6pt}}}
+    \thispagestyle{empty}
+    \begin{center}
+        \vspace*{0.4cm}
+        % ---- Logos ----
+        \noindent
+        \begin{minipage}[c]{0.48\textwidth}
+            \raggedright
+            \includegraphics[height=2.0cm,keepaspectratio]{logo-uae-1024x297.png}
+        \end{minipage}%
+        \begin{minipage}[c]{0.48\textwidth}
+            \raggedleft
+            \includegraphics[height=2.3cm,keepaspectratio]{fst-1024x383.png}
+        \end{minipage}
+        \vspace{0.6cm}
+        \textcolor{BorderGray}{\rule{\linewidth}{0.4pt}}
+        \vspace{0.3cm}
+        % ---- Etablissement ----
+        {\large\textsc{\color{PrimaryBlue} Universite Abdelmalek Essaadi}}\\[0.25cm]
+        {\normalsize\color{MidGray} Faculte des Sciences et Techniques --- Tanger}\\[0.15cm]
+        {\normalsize\textsc{\color{PrimaryBlue} Departement d'Informatique}}
+        \vspace{1.6cm}
+        [0.6cm]
+        % ---- Titre ----
+        \HRule\\[0.6cm]
+        {\huge\bfseries\color{PrimaryBlue} Moroccan Legal RAG}\\[0.3cm]
+        % ---- Illustration du projet ----
+        \includegraphics[width=0.85\textwidth, keepaspectratio]{images/hero-image.png}\\[0.3cm]
+        \HRule
+        \vspace{0.6cm}
+        % ---- Auteurs / Encadrant ----
+        \noindent
+        \begin{center}
+    \textcolor{MidGray}{\small\bfseries\sffamily Réalisé par :}\\[0.25cm]
+    \begin{tabular}{ll}
+        \textbf{\textsc{ZARQI}} Ezzoubair   & \textbf{\textsc{ELATTAR}} Mohamed \\[0.15cm]
+        \textbf{\textsc{AMAMI}} Yousra      & \textbf{\textsc{HAMDAN}} Kaouthar \\[0.15cm]
+        \multicolumn{2}{c}{\textbf{\textsc{ELGHARIB}} Mahmoud} \\
+    \end{tabular}
+
+    \vspace{0.4cm}
+    \textcolor{BorderGray}{\rule{0.4\linewidth}{0.3pt}}
+    \vspace{0.3cm}
+
+    \textcolor{MidGray}{\small\bfseries\sffamily Encadré par :}\\[0.15cm]
+    Pr. \textbf{\textsc{BENABDELOUAHAB}} Ikram
+\end{center}
+        \vfill
+        % ---- Pied de page garde ----
+        \textcolor{BorderGray}{\rule{\linewidth}{0.4pt}}\\[0.4cm]
+        {\normalsize\textbf{Projet :} Moroccan Legal RAG --- Assistant Juridique Intelligent
+        \\
+         \textbf{Filière :} Master --- Intelligence Artificielle \& Data Science
+         \quad\textcolor{BorderGray}{|}\quad
+         \textbf{Année :} 2025 -- 2026}
+        \vspace*{0.6cm}
+    \end{center}
+\end{titlepage}
+
+
+
+% ==============================================================
+% ABSTRACT (ENGLISH)
+% ==============================================================
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+This project presents a Retrieval-Augmented Generation (RAG) system dedicated to Moroccan legal information retrieval and question answering. Accessing Moroccan legal texts remains challenging due to the complexity of legal Arabic, the coexistence of multiple languages and dialects, and the large number of legal documents distributed as scanned PDF files. To address these challenges, the proposed system combines modern Natural Language Processing (NLP) techniques with large language models to provide accurate, context-aware, and explainable legal assistance.
+
+The system is built around a complete RAG pipeline consisting of legal corpus acquisition, document preprocessing, text chunking, multilingual embedding generation, vector indexing, hybrid retrieval, and answer generation. A benchmark of several multilingual embedding models was conducted using queries in Arabic, Moroccan Darija, French, and English to identify the most suitable representation model for the Moroccan legal domain. Retrieved legal passages are then supplied to a generative language model that produces grounded responses while preserving references to the original legal sources.
+
+The architecture relies on PostgreSQL with the \texttt{pgvector} extension for vector storage and similarity search, FastAPI for backend services, and a modern web interface for user interaction. Experimental evaluation demonstrates effective cross-lingual retrieval capabilities and strong performance on Moroccan legal queries, including informal user questions expressed in Darija.
+
+\vspace{0.5cm}
+
+\noindent\textbf{Keywords:} Retrieval-Augmented Generation, Moroccan Law, Legal AI, Natural Language Processing, Semantic Search, Hybrid Retrieval, Multilingual Embeddings, pgvector
+
+\clearpage
+
+% ==============================================================
+% RESUME (FRANCAIS)
+% ==============================================================
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+
+Ce projet présente un système de Génération Augmentée par Recherche (Retrieval-Augmented Generation --- RAG) dédié à la recherche et à l'assistance juridique dans le contexte du droit marocain. L'accès aux textes juridiques marocains demeure complexe en raison de la technicité de l'arabe juridique, de la coexistence de plusieurs langues et dialectes, ainsi que de la présence d'un grand nombre de documents sous forme de fichiers PDF numérisés. Afin de répondre à ces défis, le système proposé combine les techniques modernes de traitement automatique du langage naturel avec les modèles de langage génératifs pour fournir une assistance juridique précise, contextualisée et traçable.
+
+L'architecture repose sur une chaîne RAG complète comprenant la collecte du corpus juridique, le prétraitement des documents, le découpage des textes, la génération d'embeddings multilingues, l'indexation vectorielle, la recherche hybride et la génération de réponses. Une étude comparative de plusieurs modèles d'embeddings multilingues a été réalisée à partir de requêtes formulées en arabe, en darija marocaine, en français et en anglais afin d'identifier le modèle le plus adapté au domaine juridique marocain. Les passages juridiques récupérés sont ensuite transmis à un modèle génératif chargé de produire des réponses fondées sur les sources retrouvées.
+
+La solution s'appuie sur PostgreSQL et l'extension \texttt{pgvector} pour le stockage vectoriel et la recherche sémantique, FastAPI pour les services backend, ainsi qu'une interface web moderne destinée aux utilisateurs. Les résultats expérimentaux démontrent de bonnes performances en recherche multilingue ainsi qu'une capacité efficace à traiter les requêtes juridiques formulées dans différents registres linguistiques.
+
+\vspace{0.5cm}
+
+\noindent\textbf{Mots-clés :} Génération Augmentée par Recherche, Droit Marocain, Intelligence Artificielle Juridique, Traitement Automatique du Langage Naturel, Recherche Sémantique, Recherche Hybride, Embeddings Multilingues, pgvector
+
+\clearpage
+
+% ==============================================================
+% ARABIC ABSTRACT  ← UNCOMMENTED
+% ==============================================================
+\chapter*{\textarabic{الملخص}}
+\addcontentsline{toc}{chapter}{\textarabic{الملخص}}
+
+\begin{Arabic}
+
+يقدم هذا المشروع نظاماً قائماً على التوليد المعزز بالاسترجاع (RAG) مخصصاً للبحث والإجابة عن الأسئلة القانونية المتعلقة بالقانون المغربي. ويواجه الوصول إلى النصوص القانونية المغربية عدة تحديات تتمثل في تعقيد اللغة القانونية العربية، وتعدد اللغات المستعملة، وانتشار الوثائق القانونية بصيغة ملفات PDF ممسوحة ضوئياً. ولمواجهة هذه الصعوبات، يعتمد النظام المقترح على تقنيات حديثة في معالجة اللغات الطبيعية ونماذج اللغة الكبيرة من أجل توفير مساعد قانوني ذكي قادر على تقديم إجابات دقيقة وموثقة.
+
+يتكون النظام من سلسلة متكاملة تشمل جمع الوثائق القانونية، ومعالجة النصوص، وتقسيم المستندات إلى مقاطع مناسبة، وتوليد التمثيلات المتجهية متعددة اللغات، وفهرسة البيانات، وتنفيذ البحث الهجين، ثم توليد الإجابات اعتماداً على المقاطع القانونية المسترجعة. كما تم إجراء دراسة مقارنة لعدة نماذج تمثيل متعددة اللغات باستخدام استعلامات مكتوبة بالعربية الفصحى والدارجة المغربية والفرنسية والإنجليزية لاختيار النموذج الأكثر ملاءمة للبيئة القانونية المغربية. ويتم بعد ذلك تمرير النتائج المسترجعة إلى نموذج لغوي توليدي لإنتاج إجابات مدعومة بالمصادر القانونية ذات الصلة.
+
+تعتمد البنية التقنية للنظام على PostgreSQL مع إضافة \texttt{pgvector} لتخزين المتجهات وتنفيذ البحث الدلالي، وFastAPI لتوفير الخدمات الخلفية، بالإضافة إلى واجهة ويب حديثة للتفاعل مع المستخدم. وتُظهر النتائج التجريبية قدرة فعالة على البحث متعدد اللغات واسترجاع المعلومات القانونية المغربية بدقة، بما في ذلك الاستفسارات المكتوبة بالدارجة المغربية.
+
+\vspace{0.5cm}
+
+\textbf{الكلمات المفتاحية:}
+التوليد المعزز بالاسترجاع، القانون المغربي، الذكاء الاصطناعي القانوني، معالجة اللغات الطبيعية، البحث الدلالي، البحث الهجين، التمثيلات المتجهية متعددة اللغات، pgvector
+
+\end{Arabic}
+
+\clearpage
+% ==========================================
+% SOMMAIRE
+% ==========================================
+{
+    \hypersetup{linkcolor=PrimaryBlue}
+    \tableofcontents
+}
+\clearpage
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\listoftables
+
+\clearpage
+\addcontentsline{toc}{chapter}{Liste des figures}
+\listoffigures
+\clearpage
+\clearpage
+
+\include{chapters/01-Introduction-Generale}
+\include{chapters/02-Etat-de-art}
+\include{chapters/03-Conception-de-systeme.tex}
+\include{chapters/04-Mise-en-oeuvre}
+\include{chapters/05-Experimentations-et-Resultats}
+\include{chapters/Conclusion}
+
+
+
+% ---- References du chapitre ----
+\begin{thebibliography}{99}
+
+\bibitem{Darwish2014} Darwish, K. (2014). \textit{Arabic Information Retrieval}. Foundations and Trends in Information Retrieval, 7(4), 239-342.
+
+\bibitem{AlKhalifa2019} Al-Khalifa, H. (2019). \textit{Arabic Natural Language Processing: Challenges and Solutions}. ACM Transactions on Asian and Low-Resource Language Information Processing, 18(2), 1-22.
+
+\bibitem{Antoun2020} Antoun, W., Baly, F., \& Hajj, H. (2020). \textit{AraBERT: Transformer-based Model for Arabic Language Understanding}. In Proceedings of the 4th Workshop on Open-Source Arabic Corpora and Processing Tools.
+
+\bibitem{Inoue2021} Inoue, G. et al. (2021). \textit{CAMeL-BERT: A BERT Model for Arabic Dialects}. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing.
+
+\bibitem{Wang2024} Wang, L. et al. (2024). \textit{Multilingual E5 Text Embeddings: A Technical Report}. arXiv preprint.
+
+\bibitem{Chen2024} Chen, J. et al. (2024). \textit{BGE-M3: BAAI General Embedding Model}. arXiv preprint.
+
+\bibitem{Qwen2024} Qwen Team (2024). \textit{Qwen2.5 Technical Report}. Alibaba Cloud.
+
+\bibitem{Chalkidis2020} Chalkidis, I. et al. (2020). \textit{LEGAL-BERT: The Muppets straight out of Law School}. In Findings of EMNLP 2020.
+
+\bibitem{Lewis2020} Lewis, P. et al. (2020). \textit{Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks}. In Advances in Neural Information Processing Systems.
+
+\bibitem{Huang2024} Huang, Y. et al. (2024). \textit{SAIL-Legal: A Retrieval-Augmented Generation System for Chinese Legal Text}. In Proceedings of ACL 2024.
+
+\bibitem{Zhou2023} Zhou, J. et al. (2023). \textit{LexGPT: Legal Question Answering with Augmented Generation}. In Proceedings of ICAIL 2023.
+
+\bibitem{Sharma2024} Sharma, R. et al. (2024). \textit{Indian Legal RAG: Multilingual Retrieval for Legal AI}. arXiv preprint.
+
+\bibitem{Shao2023} Shao, N. et al. (2023). \textit{Hybrid Retrieval for Legal Document Search: Combining Dense and Sparse Representations}. In Proceedings of SIGIR 2023.
+
+\end{thebibliography}
+
+
+\end{document}

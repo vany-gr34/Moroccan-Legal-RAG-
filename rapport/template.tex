@@ -1,0 +1,887 @@
+\documentclass[12pt,a4paper]{report}
+
+% ==========================================
+% PACKAGES ESSENTIELS
+% ==========================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{mathpazo}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{fontawesome5}      % Icônes (info, check, warning...)
+\usepackage{booktabs}          % Tableaux professionnels
+\usepackage{array}             % Colonnes de tableaux avancées
+\usepackage{colortbl}          % Couleurs dans les tableaux
+\usepackage{mdframed}          % Encadrés avancés
+\usepackage{enumitem}          % Listes personnalisées
+\usepackage{tikz}              % Graphiques vectoriels
+\usetikzlibrary{shapes, arrows.meta, positioning, calc, decorations.pathreplacing}
+\usepackage{pgfplots}          % Graphiques de données
+\pgfplotsset{compat=1.18}
+\usepackage{multicol}          % Mise en page multi-colonnes
+\usepackage{caption}           % Légendes personnalisées
+\usepackage{subcaption}        % Sous-figures
+\usepackage{amsmath}           % Formules mathématiques
+\usepackage{amssymb}
+\usepackage{soul}              % Surlignage de texte
+\usepackage{pifont}            % Symboles spéciaux
+\usepackage{tabularx}          % Tableaux flexibles
+
+% ==========================================
+% PALETTE DE COULEURS
+% ==========================================
+\definecolor{PrimaryBlue}{RGB}{15, 52, 96}
+\definecolor{AccentBlue}{RGB}{52, 120, 246}
+\definecolor{LightBlue}{RGB}{235, 243, 255}
+\definecolor{DarkGray}{RGB}{45, 45, 55}
+\definecolor{MidGray}{RGB}{110, 110, 125}
+\definecolor{LightGray}{RGB}{245, 246, 250}
+\definecolor{BorderGray}{RGB}{220, 222, 230}
+
+% Couleurs sémantiques (cartes)
+\definecolor{InfoBlue}{RGB}{0, 122, 204}
+\definecolor{InfoBlueBg}{RGB}{232, 244, 255}
+\definecolor{InfoBlueBorder}{RGB}{144, 202, 249}
+
+\definecolor{SuccessGreen}{RGB}{22, 128, 72}
+\definecolor{SuccessGreenBg}{RGB}{232, 250, 240}
+\definecolor{SuccessGreenBorder}{RGB}{134, 210, 172}
+
+\definecolor{WarningAmber}{RGB}{160, 100, 0}
+\definecolor{WarningAmberBg}{RGB}{255, 248, 230}
+\definecolor{WarningAmberBorder}{RGB}{245, 200, 120}
+
+\definecolor{DangerRed}{RGB}{185, 28, 28}
+\definecolor{DangerRedBg}{RGB}{255, 235, 235}
+\definecolor{DangerRedBorder}{RGB}{240, 150, 150}
+
+\definecolor{TipPurple}{RGB}{90, 40, 180}
+\definecolor{TipPurpleBg}{RGB}{245, 238, 255}
+\definecolor{TipPurpleBorder}{RGB}{195, 165, 245}
+
+% Code couleurs
+\definecolor{CodeBg}{RGB}{250, 251, 253}
+\definecolor{CodeComment}{RGB}{100, 160, 100}
+\definecolor{CodeKeyword}{RGB}{0, 80, 200}
+\definecolor{CodeString}{RGB}{180, 30, 30}
+\definecolor{CodeNumber}{RGB}{140, 60, 180}
+\definecolor{CodeLineNo}{RGB}{170, 172, 185}
+\definecolor{CodeBorder}{RGB}{200, 210, 230}
+
+% ==========================================
+% CONFIGURATION DU DOCUMENT
+% ==========================================
+\geometry{top=2.8cm, bottom=2.8cm, left=2.8cm, right=2.5cm, marginparwidth=0cm}
+\setstretch{1.2}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=AccentBlue,
+    filecolor=AccentBlue,
+    urlcolor=AccentBlue,
+    pdftitle={Rapport TP - IoT},
+    pdfauthor={Ezzoubair ZARQI},
+    bookmarksnumbered=true,
+    pdfpagemode=UseOutlines
+}
+
+% ==========================================
+% TITRES ET SECTIONS
+% ==========================================
+\titleformat{\chapter}[display]
+  {\color{PrimaryBlue}\normalfont\Huge\bfseries}
+  {\color{AccentBlue}\small\bfseries\sffamily CHAPITRE \thechapter}
+  {4pt}
+  {
+    \rule{\textwidth}{1.5pt}\vspace{6pt}
+    \begin{minipage}{\textwidth}
+      \raggedright\color{PrimaryBlue}
+  }
+  [
+    \end{minipage}
+    \vspace{4pt}\rule{\textwidth}{0.4pt}
+  ]
+\titlespacing*{\chapter}{0pt}{0pt}{28pt}
+
+\titleformat{\section}
+  {\color{PrimaryBlue}\normalfont\Large\bfseries}
+  {\color{AccentBlue}\thesection}{1em}{}
+  [\color{BorderGray}\titlerule]
+\titlespacing*{\section}{0pt}{20pt}{10pt}
+
+\titleformat{\subsection}
+  {\color{PrimaryBlue}\normalfont\large\bfseries}
+  {\color{AccentBlue}\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+
+\titleformat{\subsubsection}
+  {\color{MidGray}\normalfont\normalsize\bfseries\itshape}
+  {\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{10pt}{4pt}
+
+% ==========================================
+% EN-TÊTES ET PIEDS DE PAGE
+% ==========================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{%
+  \textcolor{MidGray}{\small\sffamily Module : Internet des Objets (IoT)}%
+}
+\fancyhead[R]{%
+  \textcolor{MidGray}{\small\sffamily TP 2 : IoT sous Packet Tracer}%
+}
+\fancyfoot[L]{\textcolor{MidGray}{\scriptsize\sffamily FST Tanger --- 2025/2026}}
+\fancyfoot[C]{\textcolor{AccentBlue}{\small\bfseries\thepage}}
+\fancyfoot[R]{\textcolor{MidGray}{\scriptsize\sffamily ZARQI \& EL ATTAR}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{BorderGray}\leaders\hrule height\headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{BorderGray}\leaders\hrule height\footrulewidth\hfill}}
+
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\textcolor{AccentBlue}{\small\bfseries\thepage}}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0.4pt}
+  \renewcommand{\footrule}{\hbox to\headwidth{\color{BorderGray}\leaders\hrule height\footrulewidth\hfill}}
+}
+
+% ==========================================
+% STYLE CODE SOURCE
+% ==========================================
+\lstdefinestyle{IoTCode}{
+    language=C++,
+    backgroundcolor=\color{CodeBg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{CodeKeyword}\bfseries,
+    stringstyle=\color{CodeString},
+    commentstyle=\color{CodeComment}\itshape,
+    numberstyle=\tiny\color{CodeLineNo},
+    numbers=left,
+    numbersep=12pt,
+    stepnumber=1,
+    tabsize=2,
+    showspaces=false,
+    showstringspaces=false,
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=none,
+    xleftmargin=20pt,
+    xrightmargin=8pt,
+    aboveskip=0pt,
+    belowskip=0pt,
+    literate={à}{{\`a}}1 {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {ô}{{\^o}}1 {û}{{\^u}}1,
+}
+
+% Bloc de code avec cadre externe tcolorbox
+\newtcblisting{codeblock}[2][]{
+    enhanced,
+    listing only,
+    listing style=IoTCode,
+    colback=CodeBg,
+    colframe=CodeBorder,
+    arc=4pt,
+    boxrule=0.6pt,
+    title={\faCode\enspace\texttt{\sffamily\small #2}},
+    coltitle=PrimaryBlue,
+    fonttitle=\bfseries\small,
+    attach boxed title to top left={yshift=-2.5mm, xshift=8mm},
+    boxed title style={colback=LightGray, colframe=CodeBorder, arc=3pt, boxrule=0.5pt},
+    top=8pt,
+    #1
+}
+
+% Bloc de code inline (sans titre)
+\newtcblisting{codeinline}[1][]{
+    enhanced,
+    listing only,
+    listing style=IoTCode,
+    colback=CodeBg,
+    colframe=CodeBorder,
+    arc=4pt,
+    boxrule=0.6pt,
+    top=4pt,
+    bottom=4pt,
+    #1
+}
+
+% ==========================================
+% CARTES SÉMANTIQUES (ALERTES)
+% ==========================================
+
+% --- Info ---
+\newtcolorbox{cardinfo}[1][]{
+    enhanced, breakable,
+    colback=InfoBlueBg,
+    colframe=InfoBlueBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[InfoBlue] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt, yshift=0pt]frame.west) {\faInfoCircle};
+        \end{tcbclipinterior}
+    },
+    title={\textcolor{InfoBlue}{\bfseries\sffamily\small Information}},
+    coltitle=InfoBlue,
+    detach title, before upper={\textbf{\textcolor{InfoBlue}{\sffamily Information}}\par\smallskip},
+    #1
+}
+
+% --- Succès ---
+\newtcolorbox{cardsuccess}[1][]{
+    enhanced, breakable,
+    colback=SuccessGreenBg,
+    colframe=SuccessGreenBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[SuccessGreen] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faCheckCircle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{SuccessGreen}{\sffamily Succès}}\par\smallskip},
+    #1
+}
+
+% --- Avertissement ---
+\newtcolorbox{cardwarning}[1][]{
+    enhanced, breakable,
+    colback=WarningAmberBg,
+    colframe=WarningAmberBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[WarningAmber] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faExclamationTriangle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{WarningAmber}{\sffamily Avertissement}}\par\smallskip},
+    #1
+}
+
+% --- Danger ---
+\newtcolorbox{carddanger}[1][]{
+    enhanced, breakable,
+    colback=DangerRedBg,
+    colframe=DangerRedBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[DangerRed] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faTimesCircle};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{DangerRed}{\sffamily Danger / Erreur}}\par\smallskip},
+    #1
+}
+
+% --- Astuce ---
+\newtcolorbox{cardtip}[1][]{
+    enhanced, breakable,
+    colback=TipPurpleBg,
+    colframe=TipPurpleBorder,
+    arc=5pt, boxrule=0.8pt,
+    left=38pt, right=8pt, top=6pt, bottom=6pt,
+    overlay={
+        \begin{tcbclipinterior}
+            \fill[TipPurple] (frame.north west) rectangle ([xshift=28pt]frame.south west);
+            \node[text=white, font=\Large\bfseries] at ([xshift=14pt]frame.west) {\faLightbulb};
+        \end{tcbclipinterior}
+    },
+    detach title, before upper={\textbf{\textcolor{TipPurple}{\sffamily Astuce}}\par\smallskip},
+    #1
+}
+
+% ==========================================
+% BOÎTE DE QUESTIONS PÉDAGOGIQUES
+% ==========================================
+\newtcolorbox{questionbox}[1][]{
+    enhanced, breakable,
+    colback=LightBlue,
+    colframe=AccentBlue,
+    arc=5pt,
+    boxrule=1pt,
+    left=8pt, right=8pt, top=10pt, bottom=8pt,
+    title={\faQuestionCircle\enspace\textbf{Questions Pédagogiques}},
+    coltitle=white,
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={yshift=-3mm, xshift=6mm},
+    boxed title style={colback=AccentBlue, arc=3pt, boxrule=0pt},
+    #1
+}
+
+% ==========================================
+% BOÎTE DE DÉFINITION
+% ==========================================
+\newtcolorbox{definitionbox}[2][]{
+    enhanced, breakable,
+    colback=LightGray,
+    colframe=PrimaryBlue,
+    arc=4pt,
+    boxrule=0.8pt,
+    leftrule=4pt,
+    title={\faBookOpen\enspace\textbf{Définition :} #2},
+    coltitle=PrimaryBlue,
+    fonttitle=\sffamily\bfseries\small,
+    attach boxed title to top left={yshift=-2.5mm, xshift=6mm},
+    boxed title style={colback=white, colframe=PrimaryBlue, arc=2pt, boxrule=0.6pt},
+    #1
+}
+
+% ==========================================
+% TABLEAU PROFESSIONNEL — style personnalisé
+% ==========================================
+\newcommand{\tableheadcolor}{\rowcolor{PrimaryBlue}}
+\newcommand{\tablealtcolor}{\rowcolor{LightGray}}
+
+% ==========================================
+% BADGE / ÉTIQUETTE INLINE
+% ==========================================
+\newcommand{\badge}[2][AccentBlue]{%
+  \,\tikz[baseline=(b.base)]\node[rectangle, rounded corners=3pt,
+    fill=#1!15, draw=#1!60, inner xsep=4pt, inner ysep=1.5pt,
+    font=\sffamily\scriptsize\bfseries, text=#1] (b) {#2};\,%
+}
+
+% Badge simple sans bordure
+\newcommand{\tag}[2][AccentBlue]{%
+  \,\tikz[baseline=(b.base)]\node[rectangle, rounded corners=3pt,
+    fill=#1!20, inner xsep=4pt, inner ysep=1.5pt,
+    font=\sffamily\scriptsize\bfseries, text=#1!80!black] (b) {#2};\,%
+}
+
+% ==========================================
+% LÉGENDES
+% ==========================================
+\captionsetup{
+    font=small,
+    labelfont={bf, color=PrimaryBlue},
+    labelsep=period,
+    skip=6pt
+}
+
+% ==========================================
+% LISTES PERSONNALISÉES
+% ==========================================
+\setlist[itemize,1]{
+    label=\textcolor{AccentBlue}{\small\faChevronRight},
+    leftmargin=1.5em,
+    itemsep=3pt
+}
+\setlist[itemize,2]{
+    label=\textcolor{MidGray}{\tiny\faCircle},
+    leftmargin=1.5em,
+    itemsep=2pt
+}
+\setlist[enumerate,1]{
+    label=\textcolor{AccentBlue}{\bfseries\arabic*.},
+    leftmargin=1.8em,
+    itemsep=3pt
+}
+
+% ==========================================
+%   DOCUMENT
+% ==========================================
+\begin{document}
+
+% ==========================================
+% PAGE DE GARDE
+% ==========================================
+\begin{titlepage}
+    \newcommand{\HRule}{\textcolor{PrimaryBlue}{\rule{\linewidth}{0.6pt}}}
+
+    \thispagestyle{empty}
+    \begin{center}
+        \vspace*{0.4cm}
+
+        % ---- Logos ----
+        \noindent
+        \begin{minipage}[c]{0.48\textwidth}
+            \raggedright
+            \includegraphics[height=2.0cm,keepaspectratio]{logo-uae-1024x297.png}
+        \end{minipage}%
+        \begin{minipage}[c]{0.48\textwidth}
+            \raggedleft
+            \includegraphics[height=2.3cm,keepaspectratio]{fst-1024x383.png}
+        \end{minipage}
+
+        \vspace{0.6cm}
+        \textcolor{BorderGray}{\rule{\linewidth}{0.4pt}}
+        \vspace{0.3cm}
+
+        % ---- Établissement ----
+        {\large\textsc{\color{PrimaryBlue} Université Abdelmalek Essaâdi}}\\[0.25cm]
+        {\normalsize\color{MidGray} Faculté des Sciences et Techniques --- Tanger}\\[0.15cm]
+        {\normalsize\textsc{\color{PrimaryBlue} Département d'Informatique}}
+
+        \vspace{1.6cm}
+
+        % ---- Titre ----
+        \HRule\\[0.45cm]
+        {\huge\bfseries\color{PrimaryBlue} TITLE}\\[0.3cm]
+        {\large\color{MidGray} TP 2 : IoT sous « Packet Tracer »}\\[0.35cm]
+        \HRule
+
+        \vspace{1.8cm}
+
+        % ---- Auteurs / Encadrant ----
+        \noindent
+        \begin{minipage}[t]{0.48\textwidth}
+            \begin{flushleft}\large
+                \textcolor{MidGray}{\small\bfseries\sffamily Auteurs :}\\[0.3cm]
+                ZARQI \textsc{Ezzoubair}\\[0.15cm]
+                EL ATTAR \textsc{Mohamed}
+            \end{flushleft}
+        \end{minipage}%
+        \begin{minipage}[t]{0.48\textwidth}
+            \begin{flushright}\large
+                \textcolor{MidGray}{\small\bfseries\sffamily Encadrant :}\\[0.3cm]
+                Pr. Mohamed \textsc{El Brak}
+            \end{flushright}
+        \end{minipage}
+
+        \vfill
+
+        % ---- Pied de page garde ----
+        \textcolor{BorderGray}{\rule{\linewidth}{0.4pt}}\\[0.4cm]
+        {\normalsize\textbf{Module :} IoT \quad\textcolor{BorderGray}{|}\quad%
+         \textbf{Filière :} Master --- Informatique \quad\textcolor{BorderGray}{|}\quad%
+         \textbf{Année :} 2025 -- 2026}
+        \vspace*{0.6cm}
+
+    \end{center}
+\end{titlepage}
+
+% ==========================================
+% SOMMAIRE
+% ==========================================
+{
+    \hypersetup{linkcolor=PrimaryBlue}
+    \tableofcontents
+}
+
+\clearpage
+
+% ==========================================
+% CHAPITRE 1 : SHOWCASE DES COMPOSANTS
+% ==========================================
+\chapter{Showcase des Composants du Rapport}
+
+Ce chapitre présente tous les composants visuels disponibles dans ce gabarit.
+Vous pouvez les copier-coller directement dans vos chapitres de contenu.
+
+% ------------------------------------------
+\section{Cartes d'Alerte et de Notification}
+% ------------------------------------------
+
+Les cartes sémantiques permettent de mettre en valeur des informations importantes.
+
+\begin{cardinfo}
+    Le protocole \textbf{MQTT} (Message Queuing Telemetry Transport) fonctionne sur un modèle 
+    \textit{publish/subscribe}. Un broker central reçoit et redistribue les messages entre les clients.
+    Il est particulièrement adapté aux réseaux à faible bande passante.
+\end{cardinfo}
+
+\vspace{0.6em}
+
+\begin{cardsuccess}
+    La simulation a été complétée avec succès. Tous les capteurs sont bien connectés au broker
+    MQTT et les données remontent correctement vers le serveur central.
+\end{cardsuccess}
+
+\vspace{0.6em}
+
+\begin{cardwarning}
+    Veillez à ne pas laisser les topics MQTT sans authentification dans un environnement de production.
+    L'absence de chiffrement TLS expose les données transmises à des interceptions.
+\end{cardwarning}
+
+\vspace{0.6em}
+
+\begin{carddanger}
+    Ne jamais publier de clés API ou de mots de passe en clair dans le code source.
+    Utilisez des variables d'environnement ou un gestionnaire de secrets dédié.
+\end{carddanger}
+
+\vspace{0.6em}
+
+\begin{cardtip}
+    Pour déboguer vos échanges MQTT, utilisez l'outil \texttt{MQTT Explorer} ou l'utilitaire
+    en ligne de commande \texttt{mosquitto\_sub} avec le flag \texttt{-v} pour afficher tous les
+    messages en temps réel.
+\end{cardtip}
+
+% ------------------------------------------
+\section{Blocs de Code Source}
+% ------------------------------------------
+
+\subsection{Code Arduino — Capteur DHT11}
+
+\begin{codeblock}{sketch\_dht11.ino}
+#include <DHT.h>
+#include <PubSubClient.h>
+#include <WiFi.h>
+
+// --- Configuration réseau ---
+const char* ssid     = "MonReseau_IoT";
+const char* password = "MotDePasseSecurise";
+const char* broker   = "192.168.1.100";
+
+#define DHTPIN  4
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+WiFiClient   espClient;
+PubSubClient client(espClient);
+
+void setup() {
+    Serial.begin(115200);
+    dht.begin();
+
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\nWiFi connecté : " + WiFi.localIP().toString());
+
+    client.setServer(broker, 1883);
+}
+
+void loop() {
+    float humidity    = dht.readHumidity();
+    float temperature = dht.readTemperature();
+
+    if (isnan(humidity) || isnan(temperature)) {
+        Serial.println("Erreur lecture DHT11 !");
+        return;
+    }
+
+    // Publication MQTT
+    String payload = "{\"temp\":" + String(temperature) +
+                     ",\"hum\":"  + String(humidity)    + "}";
+    client.publish("iot/capteur/01/data", payload.c_str());
+
+    delay(5000); // Envoi toutes les 5 secondes
+}
+\end{codeblock}
+
+\vspace{0.5em}
+
+\subsection{Code Python — Souscription MQTT}
+
+\begin{codeblock}[listing options={language=Python}]{subscriber.py}
+import paho.mqtt.client as mqtt
+import json
+
+BROKER  = "192.168.1.100"
+PORT    = 1883
+TOPIC   = "iot/capteur/#"
+
+def on_connect(client, userdata, flags, rc):
+    print(f"Connecté au broker (code={rc})")
+    client.subscribe(TOPIC)
+
+def on_message(client, userdata, msg):
+    data = json.loads(msg.payload.decode())
+    print(f"[{msg.topic}] Temp={data['temp']}°C  Hum={data['hum']}%")
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+client.connect(BROKER, PORT, 60)
+client.loop_forever()
+\end{codeblock}
+
+% ------------------------------------------
+\section{Questions Pédagogiques}
+% ------------------------------------------
+
+\begin{questionbox}
+    \begin{enumerate}
+        \item Quel est le rôle du \textbf{broker} dans une architecture MQTT ?
+        \item Quelle est la différence entre les niveaux QoS 0, 1 et 2 ?
+        \item Comment sécuriseriez-vous les communications MQTT en production ?
+        \item Citez deux avantages du protocole MQTT face à HTTP pour l'IoT.
+    \end{enumerate}
+\end{questionbox}
+
+% ------------------------------------------
+\section{Tableaux Professionnels}
+% ------------------------------------------
+
+\subsection{Tableau de Comparaison de Protocoles IoT}
+
+\vspace{0.5em}
+\noindent
+\begin{tabularx}{\textwidth}{>{\bfseries\sffamily\small}p{2.8cm}
+                              >{\centering\arraybackslash\small}X
+                              >{\centering\arraybackslash\small}X
+                              >{\centering\arraybackslash\small}X
+                              >{\centering\arraybackslash\small}X}
+    \toprule
+    \rowcolor{PrimaryBlue}
+    \textcolor{white}{\sffamily Protocole} &
+    \textcolor{white}{\sffamily Transport} &
+    \textcolor{white}{\sffamily Port} &
+    \textcolor{white}{\sffamily QoS} &
+    \textcolor{white}{\sffamily Usage typique} \\
+    \midrule
+    \rowcolor{LightGray}
+    MQTT      & TCP       & 1883 / 8883 & 0, 1, 2 & Capteurs légers \\
+    CoAP      & UDP       & 5683        & Basique & Contraints, M2M \\
+    \rowcolor{LightGray}
+    HTTP/REST & TCP       & 80 / 443    & Aucun   & Web APIs \\
+    AMQP      & TCP       & 5672        & Oui     & Entreprise \\
+    \rowcolor{LightGray}
+    WebSocket & TCP       & 80 / 443    & Non     & Temps réel web \\
+    \bottomrule
+\end{tabularx}
+\captionof{table}{Comparaison des principaux protocoles IoT}
+
+\vspace{1.2em}
+
+\subsection{Tableau de Matériel Utilisé}
+
+\vspace{0.5em}
+\noindent
+\begin{tabularx}{\textwidth}{>{\centering\arraybackslash}p{0.6cm}
+                              >{\bfseries\small}p{3.5cm}
+                              >{\small}X
+                              >{\centering\arraybackslash\small}p{1.5cm}
+                              >{\centering\arraybackslash\small}p{2cm}}
+    \toprule
+    \rowcolor{PrimaryBlue}
+    \textcolor{white}{\sffamily\small \#} &
+    \textcolor{white}{\sffamily\small Composant} &
+    \textcolor{white}{\sffamily\small Description} &
+    \textcolor{white}{\sffamily\small Qté} &
+    \textcolor{white}{\sffamily\small Statut} \\
+    \midrule
+    \rowcolor{LightGray}
+    1 & ESP32 DevKit V1     & Microcontrôleur Wi-Fi/BT    & 2 & \badge[SuccessGreen]{Disponible} \\
+    2 & Capteur DHT11       & Température et humidité     & 2 & \badge[SuccessGreen]{Disponible} \\
+    \rowcolor{LightGray}
+    3 & Broker Mosquitto     & MQTT broker open-source     & 1 & \badge[AccentBlue]{Logiciel} \\
+    4 & LED RGB             & Actionneur de test          & 4 & \badge[WarningAmber]{Limité} \\
+    \rowcolor{LightGray}
+    5 & Résistances 220\,Ω  & Protection LEDs             & 8 & \badge[SuccessGreen]{Disponible} \\
+    \bottomrule
+\end{tabularx}
+\captionof{table}{Matériel requis pour le TP}
+
+% ------------------------------------------
+\section{Définitions et Termes Clés}
+% ------------------------------------------
+
+\begin{definitionbox}{MQTT}
+    \textbf{Message Queuing Telemetry Transport} est un protocole de messagerie léger
+    basé sur le modèle \textit{publish/subscribe}, conçu pour les environnements
+    à ressources limitées et les réseaux à faible bande passante ou haute latence.
+\end{definitionbox}
+
+\vspace{0.8em}
+
+\begin{definitionbox}{Broker MQTT}
+    Serveur central qui reçoit tous les messages publiés par les clients et les 
+    redistribue aux abonnés correspondants. Il gère les sessions, les files de messages
+    et les niveaux de QoS.
+\end{definitionbox}
+
+% ------------------------------------------
+\section{Listes et Énumérations}
+% ------------------------------------------
+
+\subsection{Liste à puces personnalisée}
+
+Composants d'une architecture IoT complète :
+
+\begin{itemize}
+    \item \textbf{Couche perception} : capteurs, actionneurs, microcontrôleurs
+        \begin{itemize}
+            \item Capteurs de température, d'humidité, de luminosité
+            \item Actionneurs : relais, moteurs, LEDs
+        \end{itemize}
+    \item \textbf{Couche réseau} : Wi-Fi, Zigbee, LoRa, Bluetooth
+    \item \textbf{Couche middleware} : broker MQTT, API Gateway, file de messages
+    \item \textbf{Couche application} : tableaux de bord, alertes, stockage de données
+\end{itemize}
+
+\subsection{Liste numérotée — Étapes de configuration}
+
+\begin{enumerate}
+    \item Installer \texttt{Mosquitto} sur le serveur : \texttt{sudo apt install mosquitto}
+    \item Configurer le fichier \texttt{/etc/mosquitto/mosquitto.conf}
+    \item Démarrer le service : \texttt{sudo systemctl start mosquitto}
+    \item Tester avec un client : \texttt{mosquitto\_pub -t test -m "Hello IoT"}
+    \item Vérifier la réception : \texttt{mosquitto\_sub -t test -v}
+\end{enumerate}
+
+% ------------------------------------------
+\section{Diagramme TikZ — Architecture MQTT}
+% ------------------------------------------
+
+\vspace{0.5em}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=2.2cm and 2.5cm,
+        device/.style={rectangle, rounded corners=6pt, draw=PrimaryBlue, fill=LightBlue,
+                        minimum width=2.2cm, minimum height=0.9cm,
+                        font=\sffamily\small\bfseries, text=PrimaryBlue, line width=0.8pt},
+        broker/.style={rectangle, rounded corners=6pt, draw=AccentBlue, fill=AccentBlue,
+                        minimum width=2.6cm, minimum height=1.1cm,
+                        font=\sffamily\small\bfseries, text=white, line width=1pt},
+        server/.style={rectangle, rounded corners=6pt, draw=SuccessGreen, fill=SuccessGreenBg,
+                        minimum width=2.2cm, minimum height=0.9cm,
+                        font=\sffamily\small\bfseries, text=SuccessGreen, line width=0.8pt},
+        arr/.style={-{Stealth[length=5pt]}, line width=0.8pt, color=MidGray},
+        label/.style={font=\sffamily\tiny, color=MidGray, midway}
+    ]
+        % Capteurs (gauche)
+        \node[device] (s1) {\faThermometerHalf\ Capteur 1};
+        \node[device, below=0.6cm of s1] (s2) {\faTint\ Capteur 2};
+        \node[device, below=0.6cm of s2] (s3) {\faWifi\ Capteur 3};
+
+        % Broker (centre)
+        \node[broker, right=2.5cm of s2] (broker) {\faServer\ Broker\\MQTT};
+
+        % Serveurs / Abonnés (droite)
+        \node[server, right=2.5cm of broker, yshift=0.8cm] (db) {\faDatabase\ Base};
+        \node[server, right=2.5cm of broker, yshift=-0.8cm] (dash) {\faDesktop\ Dashboard};
+
+        % Flèches publish
+        \draw[arr, color=AccentBlue] (s1) -- node[label, above]{publish} (broker);
+        \draw[arr, color=AccentBlue] (s2) -- (broker);
+        \draw[arr, color=AccentBlue] (s3) -- node[label, below]{publish} (broker);
+
+        % Flèches subscribe
+        \draw[arr, color=SuccessGreen] (broker) -- node[label, above]{subscribe} (db);
+        \draw[arr, color=SuccessGreen] (broker) -- node[label, below]{subscribe} (dash);
+    \end{tikzpicture}
+    \caption{Architecture Publish/Subscribe MQTT}
+    \label{fig:mqtt-arch}
+\end{figure}
+
+% ------------------------------------------
+\section{Badges et Étiquettes Inline}
+% ------------------------------------------
+
+Les badges permettent de qualifier visuellement des éléments dans le texte courant.
+
+\vspace{0.5em}
+\noindent
+\begin{tabular}{ll}
+\badge[AccentBlue]{Info} & État neutre ou informatif \\[6pt]
+\badge[SuccessGreen]{Succès} & Opération réussie \\[6pt]
+\badge[WarningAmber]{Attention} & Avertissement non bloquant \\[6pt]
+\badge[DangerRed]{Erreur} & Problème critique \\[6pt]
+\badge[TipPurple]{Astuce} & Conseil ou bonne pratique \\[6pt]
+\badge[MidGray]{Obsolète} & Fonctionnalité dépréciée \\
+\end{tabular}
+
+\vspace{0.8em}
+
+\noindent
+Exemple dans une phrase : Le nœud ESP32 \badge[SuccessGreen]{Actif} publie ses données sur le topic
+\texttt{iot/salle-b/temp} avec un QoS \badge[AccentBlue]{1} toutes les 10 secondes.
+
+% ==========================================
+% CHAPITRE 2 : STRUCTURE TYPE D'UN CHAPITRE
+% ==========================================
+\chapter{Travail Pratique : Titre du TP}
+
+% ------------------------------------------
+\section{Introduction et Objectifs}
+% ------------------------------------------
+
+\begin{cardinfo}
+    Ce TP a pour objectif d'explorer \ldots Décrivez brièvement le contexte et les compétences
+    visées.
+\end{cardinfo}
+
+\vspace{0.5em}
+
+À l'issue de ce TP, vous serez capable de :
+
+\begin{itemize}
+    \item Configurer un broker MQTT sous Packet Tracer
+    \item Connecter des objets IoT simulés et observer les échanges
+    \item Analyser les trames réseau capturées
+\end{itemize}
+
+% ------------------------------------------
+\section{Matériel et Environnement}
+% ------------------------------------------
+
+Listez ici le matériel et logiciels utilisés (voir le tableau de la section~\ref{tab:materiel}
+du chapitre précédent comme modèle).
+
+% ------------------------------------------
+\section{Manipulation}
+% ------------------------------------------
+
+\subsection{Étape 1 : Mise en place du réseau}
+
+Décrivez la première étape\ldots
+
+\begin{cardwarning}
+    Vérifiez l'adressage IP de chaque nœud avant de démarrer la simulation, sous peine 
+    d'obtenir des erreurs de connexion difficiles à diagnostiquer.
+\end{cardwarning}
+
+\subsection{Étape 2 : Configuration du broker}
+
+\begin{codeblock}{mosquitto.conf}
+listener 1883
+allow_anonymous true
+log_type all
+log_dest file /var/log/mosquitto/mosquitto.log
+\end{codeblock}
+
+\begin{cardsuccess}
+    Si le service démarre sans erreur, le broker est prêt à recevoir des connexions
+    sur le port 1883.
+\end{cardsuccess}
+
+% ------------------------------------------
+\section{Résultats et Analyse}
+% ------------------------------------------
+
+Présentez vos captures d'écran, observations et interprétations ici.
+
+% ------------------------------------------
+\section{Questions}
+% ------------------------------------------
+
+\begin{questionbox}
+    \begin{enumerate}
+        \item Quelle est la différence entre \texttt{publish} et \texttt{subscribe} ?
+        \item Qu'observez-vous lorsque le broker est indisponible ?
+    \end{enumerate}
+\end{questionbox}
+
+% ------------------------------------------
+\section{Conclusion}
+% ------------------------------------------
+
+\begin{cardtip}
+    Résumez ici les points clés appris durant ce TP et proposez des pistes d'amélioration
+    ou d'approfondissement pour aller plus loin.
+\end{cardtip}
+
+\end{document}

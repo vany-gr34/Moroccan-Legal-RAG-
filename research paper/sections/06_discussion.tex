@@ -1,0 +1,248 @@
+\section{Discussion}
+
+Les résultats expérimentaux révèlent plusieurs enseignements importants
+pour la conception de systèmes RAG juridiques arabes.
+
+\subsection{Performance des Modèles d'Embedding}
+
+La supériorité des modèles 1024 dimensions (E5-large, BGE-M3) sur les
+modèles 768 dimensions confirme l'importance de la capacité représentationnelle
+pour le vocabulaire juridique arabe. Les 256 dimensions supplémentaires
+permettent de coder des nuances sémantiques fines — cruciales pour
+distinguer des articles proches comme le vol simple (art. 147) du vol
+aggravé (art. 148) du Code Pénal marocain.
+
+E5-large devance légèrement BGE-M3 sur toutes les métriques (MRR 0,81
+contre 0,78, précision de domaine 89\% contre 85\%). Cependant, BGE-M3
+offre l'avantage de supporter l'embedding multi-granularité (token, phrase,
+document), ce qui pourrait être bénéfique pour les articles juridiques longs
+(plusieurs centaines de mots). Le choix entre ces deux modèles dépend donc
+du compromis entre performance pure (E5-large) et flexibilité (BGE-M3).
+
+Le faible écart entre les performances cross-lingues (français MRR 0,74,
+arabe formel MRR 0,81) est remarquable. Cela suggère que les modèles
+d'embedding multilingues modernes ont atteint un niveau de généralisation
+cross-lingue suffisant pour des applications spécialisées, réduisant le
+besoin de modèles monolingues arabes dédiés.
+
+\subsection{Apport de la Recherche Lexicale Arabe}
+
+L'intégration du tokenizer arabe spécialisé a permis à BM25 d'atteindre
+des scores non nuls (Recall@5 = 41,67\%, Hit@5 = 46,88\%), contrairement
+aux résultats précédents où le dictionnaire PostgreSQL FTS échouait
+totalement. BM25 est particulièrement utile pour :
+
+\begin{enumerate}
+    \item La recherche par numéro d'article (\texttt{المادة 147})
+    \item Les requêtes contenant des termes techniques juridiques spécifiques
+    \item Le filtrage post-recherche (exact match sur le domaine ou la loi)
+\end{enumerate}
+
+Dans RRF, BM25 contribue en apportant des résultats complémentaires que la
+recherche dense ne trouve pas, ce qui explique l'amélioration du Recall@5
+(59,38\% contre 56,77\%) et du Hit@5 (68,75\% contre 65,62\%). Le MRR@5
+de RRF (0,533) est désormais proche de celui de Dense (0,565), confirmant
+que le canal BM25 enrichit utilement la fusion.
+
+\subsection{Fidélité des Réponses Générées}
+
+La fidélité mesurée de 0,22 ne doit pas être interprétée comme un simple taux
+d'hallucination. L'analyse qualitative des réponses générées révèle que le
+LLM produit un \textbf{enrichissement contextuel légitime} non capturé par
+la métrique de chevauchement lexical (token-overlap). En effet, le LLM
+synthétise des informations provenant de plusieurs articles pour formuler
+une conclusion juridique, cite les articles avec des formulations originales
+(\textarabic{حسب المادة 513 من القانون الجنائي}), et reformule le langage
+législatif en langage explicatif accessible. Ces comportements — souhaitables
+pour un assistant juridique — abaissent artificiellement le score de fidélité
+car ils ne correspondent à aucune sous-chaîne exacte des documents sources.
+
+Plusieurs facteurs contribuent néanmoins à une fidélité réelle perfectible :
+
+\begin{enumerate}
+    \item \textbf{Taille du modèle} : Gemma 4 2B (2 milliards de paramètres)
+    a une capacité limitée à suivre des instructions complexes de grounding
+    \item \textbf{Quantification} : la quantification Q4\_K\_XL réduit
+    l'empreinte de 73\% ($\sim$1,1 Go) mais peut dégrader la précision
+    \item \textbf{Contexte long} : jusqu'à 5 articles juridiques par prompt
+    \item \textbf{Absence de fine-tuning juridique} : le modèle n'a pas été
+    spécialisé sur des données juridiques arabes
+\end{enumerate}
+
+Une évaluation par \textit{LLM-as-judge} capable de distinguer
+l'enrichissement contextuel de l'hallucination \cite{gao2023faithful}
+permettrait une mesure plus juste de la fidélité réelle du système.
+
+\subsection{Exemples de Cas d'Utilisation}
+
+Pour illustrer concrètement les forces et faiblesses du système, nous
+présentons trois exemples de questions-réponses issus de l'application
+réelle.
+
+\subsubsection{Cas 1 : Requête réussie — Droit Pénal (arabe formel)}
+
+\textbf{Question :}\par
+\begin{flushleft}\textarabic{ما هي عقوبة السرقة البسيطة حسب القانون الجنائي المغربي ?}\end{flushleft}
+
+\textbf{Articles retrouvés (RRF, top-3) :}
+\begin{itemize}
+    \item \textarabic{المادة 508 : عقوبة السرقة البسيطة...}
+    \item \textarabic{المادة 509 : ظرف تشديد العقوبة إذا كان الفاعل خادما...}
+    \item \textarabic{المادة 510 : ظرف تخفيف العقوبة لسرقة الضروريات...}
+\end{itemize}
+
+\textbf{Réponse générée (traduite de l'arabe) :}
+\begin{quote}
+\textit{\textbf{Résumé :} La peine pour vol simple au Maroc est l'emprisonnement
+de 1 à 5 ans, conformément à l'article 508 du Code Pénal marocain.
+
+\textbf{Analyse :} L'article 508 dispose que le vol simple est puni d'une
+peine d'emprisonnement d'un à cinq ans. Si le voleur est un domestique ou
+un employé de la victime (article 509), la peine est portée à 5-10 ans.
+Le vol de biens de première nécessité commis par une personne dans le besoin
+(article 510) peut bénéficier d'une peine atténuée.
+
+\textbf{Verdict :} Pour un vol simple sans circonstances aggravantes, la
+peine maximale est de 5 ans d'emprisonnement.
+
+\textbf{Sources :} Article 508, 509, 510 du Code Pénal marocain.}
+\end{quote}
+
+\textbf{Analyse :} Cet exemple illustre un cas de succès complet. La question
+est formulée en arabe formel avec un vocabulaire juridique standard
+(\textarabic{عقوبة السرقة البسيطة}). Les trois articles pertinents sont
+correctement retrouvés (Hit@3 = 100\%). Le LLM synthétise correctement
+l'information en produisant un résumé, une analyse détaillée avec référence
+croisée aux articles voisins, et un verdict juridique clair. La fidélité
+est élevée car chaque affirmation est ancrée dans un article spécifique.
+
+\subsubsection{Cas 2 : Requête partiellement réussie — Darija marocain}
+
+\textbf{Question :}\par
+\begin{flushleft}\textarabic{شنو هي العقوبة ديال السرقة فالمغرب؟}\end{flushleft}
+(« Quelle est la peine pour le vol au Maroc ? », en Darija marocain)
+
+\textbf{Articles retrouvés (RRF, top-3) :}
+\begin{itemize}
+    \item \textarabic{المادة 508 : عقوبة السرقة البسيطة...}
+    \item \textarabic{المادة 241 : خيانة الأمانة...}
+    \item \textarabic{المادة 147 : تعريف السرقة...}
+\end{itemize}
+
+\textbf{Réponse générée (traduite de l'arabe) :}
+\begin{quote}
+\textit{\textbf{Résumé :} Le vol est puni par la loi marocaine d'une peine
+d'emprisonnement.
+
+\textbf{Analyse :} L'article 147 définit le vol comme l'appropriation du
+bien d'autrui sans son consentement. L'article 508 fixe la peine
+d'emprisonnement pour vol simple. L'article 241 concerne la trahison de
+confiance, qui est une infraction distincte du vol.
+
+\textbf{Verdict :} La peine pour vol simple peut aller jusqu'à 5 ans
+d'emprisonnement.
+
+\textbf{Sources :} Articles 147, 508, 241 du Code Pénal marocain.}
+\end{quote}
+
+\textbf{Analyse :} La requête en Darija (\textarabic{شنو هي}) est correctement
+comprise grâce à la capacité cross-lingue du modèle d'embedding. Cependant,
+l'article 241 (trahison de confiance) est un faux positif : la similarité
+sémantique entre \textarabic{السرقة} (vol) et \textarabic{خيانة الأمانة}
+(trahison de confiance) est suffisamment élevée pour que l'article soit
+retrouvé, alors qu'il concerne une infraction distincte. C'est un exemple
+de \textbf{bruit sémantique} : le modèle capture la similarité thématique
+(appropriation illicite) mais pas la distinction juridique précise. La
+réponse reste correcte car le LLM distingue correctement les deux concepts.
+
+\subsubsection{Cas 3 : Requête en échec — Droit Fiscal (domaine non aligné)}
+
+\textbf{Question :}\par
+\begin{flushleft}\textarabic{ما هي نسبة الضريبة على القيمة المضافة في المغرب؟}\end{flushleft}
+(« Quel est le taux de TVA au Maroc ? »)
+
+\textbf{Articles retrouvés (RRF) :} \textbf{Aucun.}
+Le filtre \texttt{domain = `tax'} est appliqué dans la requête, mais les
+articles fiscaux sont stockés sous \texttt{domain = `civil'} dans la base
+de données. Aucun article n'est donc retrouvé.
+
+\textbf{Réponse générée :}
+\begin{quote}
+\textit{Désolé, je n'ai pas trouvé d'articles de loi correspondant à votre
+question dans les textes juridiques indexés. Veuillez reformuler votre
+question ou vérifier le domaine juridique concerné.}
+\end{quote}
+
+\textbf{Analyse :} Cet exemple illustre une limitation critique identifiée
+lors du benchmark. La question est parfaitement valide et les articles
+fiscaux existent dans la base, mais une \textbf{inadéquation de taxonomie}
+entre le filtre de recherche (\texttt{tax}) et l'étiquetage des documents
+(\texttt{civil}) empêche toute récupération. C'est un problème
+d'alignement des métadonnées, pas une limitation fondamentale du système.
+La réponse du LLM est correcte sur le plan procédural (refus de répondre
+en l'absence de contexte), ce qui démontre un comportement de \textit{safe
+refusal} — préférable à une hallucination.
+
+Ces trois exemples illustrent les capacités et les limites du système :
+précision sur les questions en arabe formel avec vocabulaire standard,
+robustesse face au Darija avec un risque de faux positifs sémantiques, et
+comportement de refus sécurisé en cas d'absence de sources pertinentes.
+
+\subsection{Passage à l'Échelle et Temps de Réponse}
+
+Le temps total de réponse (11--20 secondes) est acceptable pour une
+application de Q\&R juridique où l'utilisateur privilégie la qualité à la
+rapidité. Cependant, plusieurs optimisations sont possibles :
+
+\begin{itemize}
+    \item \textbf{Embeddings asynchrones} : pré-calculer les embeddings des
+    requêtes fréquentes
+    \item \textbf{Cache sémantique} : mettre en cache les résultats de
+    recherche pour des requêtes similaires
+    \item \textbf{Quantification vectorielle} : réduire la dimension des
+    embeddings (1024 $\rightarrow$ 512) via PCA
+    \item \textbf{Inférence LLM locale} : servir le LLM localement plutôt
+    que via tunnel Cloudflare (gain de 2--3 secondes de latence réseau)
+\end{itemize}
+
+\subsection{Limitations de l'Étude}
+
+Cette étude présente plusieurs limitations :
+
+\begin{enumerate}
+    \item \textbf{Taille du corpus} : le benchmark d'embedding utilise
+    seulement 26 articles. Un corpus plus large (centaines d'articles)
+    permettrait des conclusions plus robustes.
+    \item \textbf{Évaluation humaine} : la qualité des réponses générées
+    a été évaluée par un seul annotateur. Une évaluation multi-juges avec
+    calcul de l'accord inter-annotateur (Kappa de Cohen) serait préférable.
+    \item \textbf{Version du LLM} : Gemma 4 2B était en phase de release
+    candidate lors de l'expérimentation. Les versions stables futures
+    pourraient offrir de meilleures performances.
+    \item \textbf{Couverture juridique} : seuls six domaines de droit
+    marocain sont couverts. L'extension à la totalité du corpus juridique
+    marocain nécessiterait des ressources de calcul supplémentaires pour
+    l'indexation vectorielle.
+\end{enumerate}
+
+\subsection{Travaux Futurs}
+
+Plusieurs directions sont envisagées pour améliorer le système :
+
+\begin{enumerate}
+    \item \textbf{Amélioration de la fidélité} : fine-tuning de Gemma 4 2B
+    sur un corpus de paires (question, articles, réponse) juridiques
+    marocaines ; implémentation d'un module de vérification post-génération
+    \item \textbf{Recherche multilingue avancée} : intégration de la
+    recherche cross-lingue directe (requête française $\rightarrow$ articles
+    arabes) via E5-large
+    \item \textbf{Extension du corpus} : ingestion automatisée de
+    l'ensemble du Bulletin Officiel du Maroc
+    \item \textbf{Modèle de classification de domaines} : classifieur
+    automatique de la spécialité juridique d'une question pour filtrer
+    la recherche
+    \item \textbf{Interface conversationnelle} : support du dialogue
+    multi-tour avec mémoire de contexte et clarification de requêtes
+    \item \textbf{Déploiement en production} : conteneurisation complète
+    avec API, web, et service LLM orchestrés via Kubernetes
+\end{enumerate}

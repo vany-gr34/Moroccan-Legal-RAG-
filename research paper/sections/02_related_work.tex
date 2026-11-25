@@ -1,0 +1,217 @@
+\section{Travaux Connexes}
+
+\noindent\textcolor{titleblue}{\Large\bfseries L}'application du NLP au domaine juridique
+a suscité un intérêt croissant ces dernières années. Cette section examine les
+travaux existants dans trois axes : les systèmes de Q\&R juridique et RAG, les
+modèles de langage et d'embedding pour l'arabe, et les stratégies de recherche
+hybride.
+
+\subsection{Systèmes RAG et Q\&R Juridique}
+
+L'architecture RAG, introduite par \cite{lewis2020retrieval}, combine un
+retriever (généralement Dense Passage Retrieval) avec un générateur
+séquentiel (BART ou T5) pour produire des réponses contextualisées.
+Depuis, plusieurs systèmes RAG spécialisés ont émergé dans le domaine
+juridique. \cite{louis2023legal} présente Legal-RAG, un système de Q\&R
+juridique pour le droit indien utilisant des embeddings multilingues et un
+LLM fine-tuné. Leur approche atteint une précision de 72\% sur le jeu de
+données Indian Legal Queries. \cite{nguyen2023vietnamese} développe un
+système similaire pour le droit vietnamien, démontrant l'importance de
+l'adaptation linguistique et culturelle dans les systèmes RAG juridiques.
+
+\vspace{0.2cm}
+
+\noindent Plus proche de notre contexte, \cite{alshareef2023arabic} propose
+un système de Q\&R pour le droit saoudien utilisant AraBERT et Elasticsearch
+pour la recherche lexicale. Leur système atteint une exactitude de 68\% sur
+un jeu de 100 questions juridiques arabes. \cite{elaraby2024legal} présente
+un système RAG pour le droit égyptien avec des embeddings multilingues et
+un LLM distant. \cite{sharma2024indian} propose Indian Legal RAG, un
+système multilingue pour le droit indien intégrant une recherche hybride.
+\cite{huang2024sail} présente SAIL-Legal, un framework RAG scalable pour
+le droit chinois avec indexation vectorielle distribuée.
+\cite{zhou2023lexgpt} développe LexGPT, un assistant juridique basé sur
+GPT-4 avec augmentation par recherche. Notre travail étend ces approches
+en proposant une architecture complète, une recherche hybride avancée, et
+un benchmark systématique sur le droit marocain.
+
+\subsection{NLP Arabe pour le Domaine Juridique}
+
+Le traitement automatique de l'arabe présente des défis bien documentés
+\cite{habash2010arabic}. La morphologie riche et dérivationnelle de l'arabe
+(racine trilitère, schèmes, affixes), la diglossie (MSA vs dialectes), et
+l'orthographe ambiguë (alef sans hamza, tatweel, ligatures) rendent le
+prétraitement linguistique crucial.
+
+\vspace{0.2cm}
+
+\noindent Dans le domaine juridique spécifiquement, \cite{zaghouani2021arabic}
+souligne la complexité du vocabulaire juridique arabe, caractérisé par des
+formules figées, des emprunts au français et à l'anglais, et une syntaxe
+particulièrement élaborée. \cite{benali2025moroccan} note que les systèmes
+de NLP arabe juridique marocain doivent gérer des phrases très longues (souvent plus
+de 100 mots par article), un haut degré de co-référence, des
+abréviations non standardisées, et un mélange fréquent d'arabe et de français
+dans un même document. \cite{nassif2024arabic} propose une revue complète
+des avancées récentes en NLP arabe, confirmant que la morphologie riche
+de l'arabe et la diglossie restent des défis ouverts.
+
+\vspace{0.2cm}
+
+\noindent Un défi supplémentaire propre au contexte marocain est la
+\textbf{qualité variable des documents sources}. La majorité des textes
+de loi historiques existe uniquement au format PDF scanné (Bulletins
+Officiels), avec des défauts de numérisation importants : inclinaison,
+bruit de fond, caractères dégradés, et mélange de polices. Les techniques
+de correction post-OCR par modèles de vision (VLM) \cite{benajiba2023arabic}
+ont montré des résultats prometteurs pour l'arabe, avec une réduction des
+erreurs de reconnaissance de 30 à 50\% sur des corpus juridiques. Notre
+système adopte cette approche en cascade (EasyOCR $\rightarrow$ Gemma 4 VLM).
+
+\vspace{0.2cm}
+
+\noindent Des outils comme CAMeL Tools \cite{obaraj2021cameltools} offrent
+des analyseurs morphologiques et des tagger POS pour l'arabe standard.
+Cependant, leur application au texte juridique nécessite une adaptation,
+le vocabulaire et les structures grammaticales juridiques différant
+significativement de l'arabe journalistique ou littéraire. Dans notre système, nous avons opté pour une
+approche de normalisation basée sur des expressions régulières et des
+pondérations Unicode plutôt que des analyseurs morphologiques complets,
+afin d'éviter la propagation d'erreurs et de maintenir un débit de
+traitement élevé.
+
+\subsection{Modèles d'Embedding Multilingues}
+
+Le choix du modèle d'embedding est crucial dans tout système RAG. Pour
+l'arabe, plusieurs études ont évalué les modèles multilingues.
+\cite{ali2022arabic} compare LaBSE, XLM-R, et AraBERT sur des tâches de
+similarité sémantique arabe, concluant que LaBSE offre les meilleures
+performances cross-lingues. \cite{reimers2020multilingual} montre que les
+modèles Sentence-BERT multilingues (mpnet-base, distiluse-base) transfèrent
+bien vers l'arabe malgré un entraînement principalement sur des langues
+européennes.
+
+\vspace{0.2cm}
+
+\noindent \cite{wang2023bge} introduit BGE-M3, un modèle d'embedding
+multi-granularité (token, phrase, document) supportant plus de 100 langues,
+dont l'arabe. \cite{liang2023multilingual} présente E5-large, un modèle
+basé sur les paires texte-texte avec un pré-entraînement contrastif étendu.
+Ces deux modèles (BGE-M3 et E5-large) produisent des embeddings de 1024
+dimensions, offrant une capacité de représentation supérieure aux modèles
+768 dimensions comme mpnet-base et LaBSE.
+
+\vspace{0.2cm}
+
+\noindent Notre benchmark sur le corpus juridique marocain (section 5) est
+le premier, à notre connaissance, à comparer systématiquement ces cinq
+modèles (E5-large, BGE-M3, LaBSE, mpnet-base, E5-base) avec des variantes
+de requêtes multilingues (arabe formel, Darija, français, anglais) dans un
+contexte juridique.
+
+\subsection{Stratégies de Recherche Hybride}
+
+La recherche dense (vectorielle) capture la similarité sémantique mais peut
+manquer des correspondances lexicales exactes (numéros d'articles, termes
+techniques spécifiques). La recherche BM25 excelle dans la correspondance
+exacte mais ignore le contexte sémantique \cite{robertson2009bm25}. La
+fusion de ces deux approches a montré des gains significatifs dans divers
+domaines \cite{lin2021hybrid}.
+
+\vspace{0.2cm}
+
+\noindent Reciprocal Rank Fusion (RRF) \cite{cormack2009reciprocal} est une
+méthode de fusion non paramétrique robuste qui combine les rangs de
+plusieurs listes de classement. Contrairement à la fusion pondérée linéaire
+(hybrid), RRF ne nécessite pas de calibration d'hyperparamètres sur un jeu
+de validation et est moins sensible aux différences d'échelle entre les
+scores des différents systèmes. Dans notre contexte juridique arabe, RRF
+s'est avéré particulièrement adapté car les scores de similarité dense
+(cosinus) et de BM25 (tf-idf normalisé) opèrent sur des échelles très
+différentes.
+
+\vspace{0.2cm}
+
+\noindent \cite{shao2023hybrid} a démontré que la recherche hybride
+Dense + BM25 + RRF offre les meilleurs résultats pour les requêtes
+juridiques, confirmant les résultats de \cite{thakur2021hybrid} sur les
+benchmarks BEIR et MTEB. Notre benchmark (section 5) confirme ces
+résultats dans le domaine juridique arabe, avec une amélioration notable
+du Hit@5 (68,75\% pour RRF contre 65,62\% pour dense et 46,88\% pour BM25).
+
+\subsection{Large Language Models pour l'Arabe}
+
+Les LLMs ouverts ont connu une adoption massive récemment. Gemma 4
+\cite{google2025gemma4} est la quatrième génération des modèles ouverts
+de Google, basée sur l'architecture Gemma. Disponible en tailles 2B et 9B,
+elle supporte le multilingue dont l'arabe avec des performances compétitives.
+Pour notre système, nous utilisons Gemma 4 2B en quantification Q4\_K\_XL via
+llama.cpp \cite{gerganov2023llamacpp}, servie sur un GPU T4 via Google Colab.
+
+\vspace{0.2cm}
+
+\noindent Des études récentes \cite{hendy2023llm} montrent que les LLMs
+multilingues comme Gemma et Llama peuvent répondre correctement à des
+questions juridiques en arabe sans fine-tuning spécifique, à condition de
+recevoir un contexte pertinent via RAG. L'approche \textit{zero-shot} avec
+injection de contexte (grounding) est préférée au fine-tuning car elle évite
+le surapprentissage et permet de maintenir la base de connaissances
+juridiques à jour sans réentraînement.
+
+\subsection{Synthèse Comparative}
+
+Le tableau~\ref{tab:related_synthesis} synthétise les caractéristiques
+techniques des principaux systèmes RAG juridiques récents comparés à
+notre proposition.
+
+\begin{table}[H]
+\centering
+\caption{Synthèse comparative des systèmes RAG juridiques récents}
+\label{tab:related_synthesis}
+\renewcommand{\arraystretch}{1.15}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Système} & \textbf{Dom.} & \textbf{Rech.} & \textbf{Embedding} & \textbf{P. max} \\
+\midrule
+Lewis+ (2020) & Général & DPR & BERT & 68\%\\
+\cite{lewis2020retrieval} & & & & (R@20)\\
+\midrule
+Louis+ (2023) & Indien & Dense & e5 & 72\%\\
+\cite{louis2023legal} & & (FAISS) & & (P@1)\\
+\midrule
+Alshareef+ (2023) & Saoudien & Lexical & AraBERT & 68\%\\
+\cite{alshareef2023arabic} & & (ES) & & (Acc.)\\
+\midrule
+Zhou+ (2023) & US & Hybride & Ada-002 & N/D\\
+\cite{zhou2023lexgpt} & & (GPT-4) & &\\
+\midrule
+Nguyen+ (2023) & Vietnam. & Dense & PhoBERT & 65\%\\
+\cite{nguyen2023vietnamese} & & (FAISS) & & (Acc.)\\
+\midrule
+Elaraby+ (2024) & Égyptien & Hybride & E5-l. & 70\%\\
+\cite{elaraby2024legal} & & (RRF) & & (F1)\\
+\midrule
+Sharma+ (2024) & Indien & Hybride & MuRIL & 73,5\%\\
+\cite{sharma2024indian} & & (RRF) & & (MRR)\\
+\midrule
+Huang+ (2024) & Chinois & Hybride & BGE & 76,2\%\\
+\cite{huang2024sail} & & (Dist.) & & (H@5)\\
+\midrule
+\textbf{Notre sys.} & \textbf{Maroc} & \textbf{Hybr.} & \textbf{E5-l.} & \textbf{81\%}\\
+\textbf{(2026)} & \textbf{7 dom.} & \textbf{RRF} & \textbf{1024d} & \textbf{MRR}\\
+\bottomrule
+\end{tabular}
+}%
+\end{table}
+
+\vspace{0.2cm}
+
+\noindent Notre système se distingue par plusieurs aspects : (1) la
+combinaison de la recherche hybride RRF avec un tokenizer arabe spécialisé
+pour le canal BM25 ; (2) l'évaluation systématique de 5 modèles d'embedding
+multilingues sur un corpus juridique arabe avec 65 variantes de requêtes ;
+(3) un pipeline complet de la numérisation OCR à la génération de réponses,
+totalement open-source et conteneurisé. Seul le système de \cite{elaraby2024legal}
+partage une architecture similaire pour le monde arabe, mais notre corpus
+est plus étendu (2\,357 articles vs. 800) et notre benchmark plus approfondi.

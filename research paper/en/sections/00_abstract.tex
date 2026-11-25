@@ -1,0 +1,59 @@
+\twocolumn[{
+\begin{flushleft}
+
+{\small
+Department of Computer Engineering\\
+Faculty of Sciences and Techniques Tangier\\
+Abdelmalek Essaadi University, Morocco\\
+2025/2026\par
+}
+
+\vspace{2.5em}
+
+{\color{titleblue}\Huge\bfseries
+Moroccan Legal Question Answering System\\[0.2em]
+Based on Retrieval-Augmented Generation (RAG)\\[0.2em]
+with Arabic Natural Language Processing\par
+}
+
+\vspace{1.5em}
+
+{\large\bfseries
+Supervised by: Pr. M. El Brak\\[0.8em]
+Presented by: [Project Team]\par
+}
+
+\end{flushleft}
+
+\vspace{1.5em}
+
+\begin{leftbar}
+\textbf{\textcolor{headingblue}{ABSTRACT}} This paper presents the design,
+implementation, and evaluation of a legal Question Answering (Q\&A) system
+specialized in Moroccan law, based on the Retrieval-Augmented Generation (RAG)
+architecture. The system integrates a complete Arabic NLP pipeline including
+text extraction from PDF documents (digital and scanned), cleaning, Arabic
+normalization, structural analysis of legal articles, and vector indexing via
+PostgreSQL with the pgvector extension. Hybrid search combines dense cosine
+similarity (BAAI/bge-m3 model, 1024 dimensions) with BM25 lexical search,
+fused through Reciprocal Rank Fusion (RRF). The generation module relies on
+Google's Gemma 4 2B model, served on GPU via Google Colab and accessible
+through a Cloudflare tunnel. Benchmarks show that the RRF strategy achieves
+a Hit@5 of 68.75\% and a Recall@5 of 59.38\%, while dense search offers the
+best MRR@5 (0.565). Embedding model evaluation demonstrates the superiority
+of 1024-dimension models (intfloat/multilingual-e5-large, BAAI/bge-m3) for
+Arabic legal text, with domain accuracy reaching 89\%. This work constitutes
+the first complete open-source Moroccan legal RAG platform, covering seven
+areas of law (criminal, traffic, family, civil, commercial, judicial, tax).
+\end{leftbar}
+
+\vspace{1em}
+
+\begin{leftbar}
+\textbf{\textcolor{headingblue}{KEYWORDS}} RAG, Arabic NLP, Moroccan Law,
+Hybrid Search, Multilingual Embeddings, pgvector, Gemma 4,
+Legal Question Answering, Reciprocal Rank Fusion.
+\end{leftbar}
+
+\vspace{2.5em}
+}]

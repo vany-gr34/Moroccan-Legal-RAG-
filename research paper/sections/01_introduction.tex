@@ -1,0 +1,80 @@
+\section{Introduction}
+
+\noindent\textcolor{titleblue}{\Large\bfseries L}'accès à l'information juridique est un droit
+fondamental dans tout État de droit. Au Maroc, le corpus juridique est vaste et
+complexe, comprenant des centaines de lois, codes et décrets rédigés
+principalement en arabe classique moderne (MSA). Pour les citoyens, les
+praticiens du droit et les chercheurs, naviguer dans cet océan de textes
+juridiques afin de trouver une réponse précise à une question spécifique
+constitue un défi majeur. Les moteurs de recherche généralistes (Google, Bing)
+sont mal adaptés à cette tâche : ils ne comprennent ni la spécificité du
+vocabulaire juridique arabe ni la structure hiérarchique des codes de loi
+(articles, chapitres, sections).
+
+\vspace{0.2cm}
+
+\noindent Les récents progrès en Traitement du Langage Naturel (NLP),
+particulièrement dans le domaine des modèles de langage de grande taille (LLM)
+et du Retrieval-Augmented Generation (RAG), offrent une opportunité sans
+précédent pour construire des systèmes de Question-Réponse (Q\&R) spécialisés
+\cite{lewis2020retrieval}. L'approche RAG combine un module de recherche
+d'information (retrieval) avec un module de génération de texte (LLM), permettant
+de produire des réponses contextualisées, sourcées et à jour sans nécessiter de
+fine-tuning coûteux. Cependant, l'application du RAG au domaine juridique arabe
+présente des défis uniques : la rareté des modèles d'embedding multilingues
+optimisés pour le vocabulaire juridique, la complexité morphologique de l'arabe
+\cite{habash2010arabic}, la présence de Darija (arabe dialectal marocain) dans
+les requêtes des utilisateurs, et la nécessité d'une fidélité absolue aux textes
+de loi. Les documents sources sont eux-mêmes difficiles d'accès : la majorité
+des textes historiques existe uniquement au format PDF scanné, nécessitant une
+chaîne complète d'OCR et de correction par modèle de vision (VLM) avant toute
+exploitation.
+
+\vspace{0.2cm}
+
+\noindent Le système que nous proposons s'appuie sur un corpus de \textbf{2\,357
+articles juridiques} couvrant sept domaines du droit marocain : pénal (822
+articles), trafic (228), civil (705), commercial (359), organisation judiciaire
+(32), fiscal (211), et contraventions. Ces articles sont extraits de leurs PDF
+sources, nettoyés, normalisés en arabe standard, structurés avec métadonnées
+hiérarchiques, et indexés dans PostgreSQL + pgvector à l'aide du modèle
+d'embedding \texttt{intfloat/multilingual-e5-large} (1024 dimensions).
+
+\vspace{0.2cm}
+
+\noindent Cet article présente la conception, l'implémentation et l'évaluation
+rigoureuse d'un système complet de Q\&R juridique marocain basé sur RAG. Notre
+contribution est quadruple :
+
+\begin{enumerate}
+    \item Une \textbf{chaîne de traitement NLP arabe complète} allant de
+    l'extraction de texte à partir de PDF (numériques et scannés) jusqu'à la
+    normalisation morphologique, le nettoyage, et l'analyse structurelle des
+    codes de loi marocains.
+    \item Une \textbf{architecture de recherche hybride} combinant similarité
+    vectorielle dense (modèle \texttt{BAAI/bge-m3}, 1024 dimensions) avec
+    recherche lexicale BM25, fusionnée par Reciprocal Rank Fusion (RRF), et
+    indexée dans PostgreSQL + pgvector avec un index HNSW.
+    \item Un \textbf{benchmark systématique} — le premier à notre connaissance
+    — de cinq modèles d'embedding multilingues (\texttt{intfloat/multilingual-e5-large},
+    \texttt{BAAI/bge-m3}, \texttt{LaBSE}, \texttt{mpnet-base}, \texttt{e5-base})
+    sur un corpus de 26 articles juridiques marocains avec 65 variantes de
+    requêtes couvrant l'arabe formel, le Darija, le français, l'anglais, et
+    les requêtes courtes/longues.
+    \item Un \textbf{benchmark comparatif} de trois stratégies de recherche
+    (dense, BM25, RRF) sur 32 questions réparties sur 7 domaines juridiques,
+    évaluant à la fois la qualité de la récupération (Précision@5, Rappel@5,
+    MRR@5, NDCG@5) et la qualité des réponses générées (pertinence, fidélité,
+    exactitude).
+\end{enumerate}
+
+\vspace{0.2cm}
+
+\noindent La suite de cet article est organisée comme suit : la section 2
+présente les travaux connexes en NLP arabe, systèmes RAG juridiques, et
+modèles d'embedding multilingues. La section 3 décrit l'architecture globale
+du système. La section 4 détaille la méthodologie incluant le pipeline de
+prétraitement, la stratégie de recherche hybride, et la génération de réponses.
+La section 5 présente les résultats expérimentaux des benchmarks. La section 6
+discute les implications, limitations, et directions futures. Enfin, la section
+7 conclut l'article.

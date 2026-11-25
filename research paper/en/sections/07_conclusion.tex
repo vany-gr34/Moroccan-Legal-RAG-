@@ -1,0 +1,62 @@
+\section{Conclusion and Future Work}
+
+This paper presented the design, implementation, and rigorous evaluation of
+a Moroccan legal Question Answering system based on the Retrieval-Augmented
+Generation (RAG) architecture. The system integrates a complete Arabic NLP
+pipeline -- PDF extraction, cleaning, Arabic normalization, structural
+analysis, vector indexing, hybrid search, and LLM-based answer generation --
+into a modular, open-source, and reproducible platform.
+
+Our main contributions are:
+
+\begin{enumerate}
+    \item A \textbf{complete and robust Arabic NLP chain} for the Moroccan
+    legal domain, including a multi-method PDF extractor, legal-specific
+    noise cleaner, standardized Arabic normalizer, and legal code structure
+    parser.
+    \item A \textbf{hybrid Dense + BM25 + RRF search architecture} indexed
+    in PostgreSQL + pgvector with HNSW indexing, achieving Hit@5 of 68.75\%
+    and Recall@5 of 59.38\%.
+    \item The \textbf{first comparative benchmark of five multilingual
+    embedding models} on an Arabic legal corpus with 65 query variants,
+    establishing the superiority of 1024-dimension models (E5-large: MRR
+    0.81, domain accuracy 89\%).
+    \item A \textbf{comprehensive evaluation of generated answer quality}
+    revealing that BM25 is now functional (Recall@5 = 41.67\%) thanks to
+    the specialized Arabic tokenizer, and that faithfulness (0.47) shows
+    notable improvement.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\caption{Comparison with existing solutions}
+\label{tab:comparison}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Capability} & \textbf{Google} & \textbf{legislation.ma} & \textbf{ChatGPT} & \textbf{LLM only} & \textbf{Our system} \\
+\midrule
+Arabic semantic search & No & No & No & No & \textbf{Yes} \\
+Generated answers & No & No & Yes & Yes & \textbf{Yes} \\
+Article citations & -- & -- & Sometimes & Sometimes & \textbf{Yes} \\
+Source grounding & -- & -- & No & No & \textbf{Yes} \\
+Open-source & -- & -- & No & Varies & \textbf{Yes} \\
+Local deployment (Docker) & -- & -- & No & Varies & \textbf{Yes} \\
+Moroccan legal corpus & Partial & Yes & No & No & \textbf{Yes (7 domains)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Key findings confirm the viability of RAG for Arabic legal Q\&A. However,
+identified limitations -- the Darija--MSA dialect gap (29\%), pipeline
+latency (13--14s), partial corpus coverage, and the inaccessible tax domain
+-- define a clear roadmap for future improvements: embedding fine-tuning
+on legal Arabic, local embedding deployment, LLM-as-judge evaluation, and
+extension to the complete Moroccan Official Bulletin.
+
+Beyond its technical results, this project demonstrates the potential of
+the RAG architecture to democratize access to law in countries where
+linguistic barriers and source dispersion constitute major obstacles. The
+developed methodology -- OCR+VLM extraction, Arabic normalization,
+multilingual embedding, hybrid search, grounded generation -- is
+transferable to other Arabic-speaking legal systems (Tunisia, Algeria,
+Egypt) with minimal localization effort.

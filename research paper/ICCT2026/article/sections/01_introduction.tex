@@ -1,0 +1,57 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Access to legal information is a fundamental right in any state governed by
+the rule of law. In Morocco, the legal corpus is vast and complex, comprising
+hundreds of laws, codes, and decrees written primarily in Modern Standard
+Arabic (MSA). For citizens, legal practitioners, and researchers, navigating
+this corpus to find a precise answer to a specific question constitutes a
+major challenge. General-purpose search engines (Google, Bing) are poorly
+suited to this task: they neither understand the specificity of Arabic legal
+vocabulary nor the hierarchical structure of legal codes (articles, chapters,
+sections).
+
+Recent advances in Natural Language Processing (NLP), particularly in Large
+Language Models (LLMs) and Retrieval-Augmented Generation (RAG)
+\cite{lewis2020retrieval}, offer an unprecedented opportunity to build
+specialized Question Answering (Q\&A) systems. The RAG approach combines an
+information-retrieval module with a text-generation module (LLM), producing
+contextualized, sourced, and up-to-date responses without requiring expensive
+fine-tuning. However, applying RAG to the Arabic legal domain presents unique
+challenges: the scarcity of multilingual embedding models optimized for legal
+vocabulary, the morphological complexity of Arabic \cite{habash2010arabic},
+the presence of Darija (the Moroccan Arabic dialect) in user queries, the
+need for absolute fidelity to legal texts, and the difficulty of processing
+scanned historical legal documents.
+
+Our system relies on a corpus of \textbf{2{,}357 legal articles} covering
+seven areas of Moroccan law: criminal (822 articles), traffic (228), civil
+(705), commercial (359), judicial organization (32), tax (211), and
+violations. These articles are extracted from their source PDFs, cleaned,
+normalized to standard Arabic, structured with hierarchical metadata, and
+indexed in PostgreSQL + pgvector using the
+\texttt{intfloat/multilingual-e5-large} embedding model (1024 dimensions).
+
+Our contributions are fourfold:
+\begin{enumerate}
+  \item A \textbf{complete Arabic NLP processing chain} from PDF extraction
+        (digital and scanned) to morphological normalization, cleaning, and
+        structural analysis of Moroccan legal codes.
+  \item A \textbf{hybrid search architecture} combining dense vector
+        similarity (\texttt{BAAI/bge-m3}, 1024 dimensions) with BM25 lexical
+        search, fused via Reciprocal Rank Fusion (RRF), indexed in
+        PostgreSQL + pgvector with an HNSW index.
+  \item A \textbf{systematic benchmark} of five multilingual embedding models
+        on 26 Arabic legal articles with 65 query variants covering formal
+        Arabic, Darija, French, English, and short/long queries.
+  \item A \textbf{comparative benchmark} of three search strategies (dense,
+        BM25, RRF) on 32 questions across 7 legal domains, evaluating both
+        retrieval quality and generated-answer quality.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:related}
+presents related work. Section~\ref{sec:methodology} describes our
+methodology. Section~\ref{sec:solution} details the proposed system
+architecture. Section~\ref{sec:results} presents experimental results.
+Section~\ref{sec:discussion} discusses implications and limitations.
+Section~\ref{sec:conclusion} concludes the paper.

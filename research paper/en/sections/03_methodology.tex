@@ -1,0 +1,69 @@
+\section{Methodology}
+
+This section describes the experimental methodology employed to evaluate
+system performance, including the embedding model benchmark protocol,
+search strategy evaluation, and generated answer quality metrics.
+
+\subsection{Embedding Model Benchmark}
+
+\subsubsection{Test Corpus}
+
+A corpus of 26 Moroccan legal articles was assembled, covering five domains:
+criminal (7 articles, No.~147--436), traffic (5 articles, No.~172--180),
+family (5 articles, No.~48--78), civil (4 articles, No.~1--100), and
+commercial (4 articles, No.~1--55). Each article was carefully selected
+to include close neighbors (hard negatives) -- for example, Article 147
+(simple theft) and Article 148 (aggravated theft) of the Penal Code -- to
+test models' ability to discriminate legally distinct but semantically
+similar texts.
+
+\subsubsection{Query Variants}
+
+For each article group, five to seven query variants were generated:
+formal Arabic, Moroccan Darija, short keywords (2--3 words), long
+descriptive queries, cross-lingual French, and cross-lingual English.
+In total, 65 query variants were evaluated across 5 embedding models.
+
+\subsubsection{Models Evaluated}
+
+Five multilingual embedding models were compared:
+
+\begin{itemize}
+    \item \textbf{E5-large} (intfloat/multilingual-e5-large, 1024d)
+    \item \textbf{BGE-M3} (BAAI/bge-m3, 1024d)
+    \item \textbf{LaBSE} (sentence-transformers/LaBSE, 768d)
+    \item \textbf{MPNet} (paraphrase-multilingual-mpnet-base-v2, 768d)
+    \item \textbf{E5-base} (intfloat/multilingual-e5-base, 768d)
+\end{itemize}
+
+\subsubsection{Metrics}
+
+For each (model, variant) pair, cosine similarity was computed between
+query and document embeddings. Metrics: Precision@k ($k \in \{1,3,5\}$),
+Mean Reciprocal Rank (MRR), NDCG@5, domain accuracy, and Hit@10.
+
+\subsection{Retrieval Strategy Benchmark}
+
+\subsubsection{Experimental Setup}
+
+Three search strategies were compared: dense (pgvector cosine), BM25
+(rank-bm25 with Arabic tokenizer), and RRF (fusion of both). The test
+set comprises 32 legal questions across 7 domains with top-k = 5.
+Paired Student's t-tests were applied for statistical significance.
+
+\subsubsection{Generation Metrics}
+
+For each strategy, retrieved articles were passed to the LLM (Gemma 4 2B,
+temperature 0.3, max\_tokens=512). Three metrics were evaluated:
+
+\begin{itemize}
+    \item \textbf{Answer Relevance}: cosine similarity between question
+    and answer embeddings (0--1)
+    \item \textbf{Faithfulness}: proportion of answer claims grounded in
+    retrieved documents via token overlap (0--1)
+    \item \textbf{Answer Correctness}: composite ROUGE-L + BERTScore F1
+    against ground truth (0--1)
+\end{itemize}
+
+Questions were stratified by domain (7 domains) and difficulty level
+(easy: 10, medium: 11, hard: 11) to identify specific system weaknesses.

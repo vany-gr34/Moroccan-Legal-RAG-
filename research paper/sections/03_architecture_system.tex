@@ -1,0 +1,247 @@
+\section{Architecture du Système}
+
+\subsection{Vue d'Ensemble}
+
+Le système Moroccan Legal RAG suit une architecture en couches organisée
+autour de deux flux principaux : le flux d'ingestion (PDF $\rightarrow$ base
+de connaissances vectorielle) et le flux d'inférence (question $\rightarrow$
+réponse générée). L'architecture est conçue pour être modulaire, chaque
+couche étant interchangeable indépendamment.
+
+\begin{figure}[H]
+\centering
+\fbox{
+\begin{minipage}{0.9\columnwidth}
+\footnotesize\ttfamily
+\begin{tabular}{l}
+\textbf{Flux d'Ingestion :} \\
+PDF $\xrightarrow{\text{extraction}}$ Texte brut $\xrightarrow{\text{nettoyage}}$ \\
+$\xrightarrow{\text{normalisation}}$ Texte normalis\'e $\xrightarrow{\text{parsing}}$ \\
+Articles JSON $\xrightarrow{\text{embedding}}$ Vecteurs 1024d $\xrightarrow{\text{insertion}}$ pgvector \\
+\\
+\textbf{Flux d'Inf\'erence :} \\
+Question $\xrightarrow{\text{embedding}}$ Vecteur $\xrightarrow{\text{recherche}}$ \\
+Dense (pgvector cos) + BM25 (rank-bm25) \\
+$\xrightarrow{\text{RRF}}$ Articles $\xrightarrow{\text{prompt}}$ LLM $\rightarrow$ R\'eponse
+\end{tabular}
+\end{minipage}
+}
+\caption{Architecture g\'en\'erale du syst\`eme Moroccan Legal RAG}
+\end{figure}
+
+\subsection{Composants du Flux d'Ingestion}
+
+Le flux d'ingestion transforme les documents juridiques (PDF) en une base de
+connaissances vectorielle interrogable. Il comprend cinq étapes principales :
+
+\subsubsection{Classification et Extraction PDF avec Correction VLM}
+
+Un classifieur de PDF \cite{src:pdfclassifier} détermine si un document est
+numérique (texte intégral extractible) ou scanné (basé sur image), en
+analysant le ratio pages textuelles/pages image avec des seuils configurables
+dans \texttt{config/config.yaml}. Pour les PDF numériques, un extracteur
+séquentiel essaye d'abord pdfplumber puis PyMuPDF (fallback layout-aware avec
+reconstruction de colonnes).
+
+Pour les PDF scannés, le pipeline complet comprend quatre étapes :
+\begin{enumerate}
+    \item \textbf{Rendu} : PyMuPDF convertit chaque page en image PNG
+    \item \textbf{OCR} : EasyOCR effectue la reconnaissance du texte arabe
+    sur GPU
+    \item \textbf{Correction par VLM} : Gemma 4 en mode vision corrige les
+    erreurs de reconnaissance avec un prompt spécialisé (\textit{«Corrige
+    UNIQUEMENT les erreurs d'OCR. NE TRADUIS PAS. NE RESUMES PAS.»})
+    \item \textbf{Post-traitement} : correction de l'ordre visuel arabe
+    (inversion des segments de droite à gauche)
+\end{enumerate}
+
+Cette approche en cascade (OCR $\rightarrow$ VLM) permet de corriger les
+erreurs fréquentes d'OCR pour l'arabe : confusion entre caractères
+visuellement similaires (\textarabic{ت} / \textarabic{ث} / \textarabic{ب}),
+segmentation incorrecte des mots liés, et omission de points diacritiques.
+
+\subsubsection{Nettoyage du Texte Juridique}
+
+Le module \texttt{LegalTextCleaner} \cite{src:cleaner} élimine le bruit
+spécifique aux documents juridiques marocains :
+
+\begin{itemize}
+    \item \textbf{En-têtes et pieds de page} : motifs répétitifs détectés par
+    fréquence de ligne sur l'ensemble du document
+    \item \textbf{Numéros de page} : motifs \texttt{-\textbackslash d+-} et
+    \texttt{\textbackslash d+/\textbackslash d+}
+    \item \textbf{Watermarks et tampons} : textes fantômes et filigranes
+    \item \textbf{Table des matières} : lignes avec motifs
+    \texttt{......} et numéros de page
+    \item \textbf{Duplication} : paragraphes identiques consécutifs
+    \item \textbf{Sauts de ligne incorrects} : lignes coupées au milieu d'une
+    phrase (détection par absence de ponctuation finale et longueur < 80 car.)
+    \item \textbf{Artéfacts non textuels} : séquences de caractères spéciaux,
+    espaces multiples, lignes vides excessives
+\end{itemize}
+
+\subsubsection{Normalisation Arabe}
+
+Le module \texttt{ArabicNormalizer} \cite{src:normalizer} effectue une
+normalisation standardisée du texte arabe :
+
+\begin{itemize}
+    \item \textbf{Normalisation Unicode NFKC} : décomposition des caractères
+    composés
+    \item \textbf{Unification des alefs} : \texttt{آ}, \texttt{أ}, \texttt{إ},
+    \texttt{ٱ} $\rightarrow$ \texttt{ا}
+    \item \textbf{Suppression des diacritiques} : voyelles courtes
+    (fatha, damma, kasra), shadda, sukun
+    \item \textbf{Suppression du tatweel} : caractère de prolongation
+    (kashida) \texttt{ـ}
+    \item \textbf{Normalisation du ya et du taa marbouta} : \texttt{ى}
+    $\rightarrow$ \texttt{ي}, \texttt{ة} $\rightarrow$ \texttt{ه} en
+    position finale
+    \item \textbf{Normalisation des chiffres} : conversion des chiffres
+    arabo-indiens orientaux (\texttt{٠١٢٣...}) en chiffres arabes standards
+    (\texttt{0123...})
+    \item \textbf{Espacement de la ponctuation} : séparation des signes de
+    ponctuation des mots adjacents
+\end{itemize}
+
+\subsubsection{Analyse Structurelle et Parsing}
+
+Le \texttt{LegalStructureParser} \cite{src:structure} extrait la structure
+hiérarchique des codes de loi. Le texte normalisé est parsé pour identifier :
+
+\begin{itemize}
+    \item \textbf{Livres / Parties} : titres de haut niveau (\textarabic{القسم الأول})
+    \item \textbf{Chapitres} : (\textarabic{الباب الأول}, \textarabic{الفصل الأول})
+    \item \textbf{Sections} : (\textarabic{المبحث الأول}, \textarabic{الفرع الأول})
+    \item \textbf{Articles} : motifs \texttt{المادة $X$} avec leur
+    contenu textuel complet
+\end{itemize}
+
+Chaque article est ensuite enrichi avec son contexte hiérarchique complet
+(nom de la loi, numéro de loi, livre, chapitre, section) et sérialisé au
+format JSON pour l'ingestion.
+
+\subsubsection{Ingestion Vectorielle}
+
+Le pipeline d'ingestion \cite{src:ingestion} traite les articles JSON comme
+suit :
+
+\begin{enumerate}
+    \item \textbf{Contextualisation} : chaque article est préfixé par son
+    contexte : \texttt{[Code P\'enal] [Section 3] \textarabic{المادة 147:} ...}
+    \item \textbf{Embedding} : le modèle \texttt{BAAI/bge-m3} produit un
+    vecteur de 1024 dimensions. Les articles longs (>2000 caractères) sont
+    tronqués pour éviter les OOM GPU.
+    \item \textbf{Insertion} : les vecteurs sont insérés dans la table
+    \texttt{legal\_chunks} de PostgreSQL, avec un index HNSW (m=16,
+    ef\_construction=200) pour la recherche approximative du plus proche
+    voisin (ANN).
+\end{enumerate}
+
+\subsection{Composants du Flux d'Inférence}
+
+\subsubsection{API REST (FastAPI)}
+
+L'API \cite{src:api} expose six routes sous \texttt{/api/v1} :
+
+\begin{itemize}
+    \item \texttt{GET /health} — État du système
+    \item \texttt{POST /search} — Recherche pure (retrieval sans LLM)
+    \item \texttt{POST /ask} — Q\&R complète (retrieval + génération LLM)
+    \item \texttt{GET /laws} — Liste des lois et articles disponibles
+    \item \texttt{POST /upload} — Upload et ingestion de nouveaux PDF
+    \item \texttt{GET /conversations} — Historique des sessions Q\&R
+\end{itemize}
+
+\subsubsection{Moteur de Recherche Hybride}
+
+Le système implémente trois stratégies de recherche interchangeables via un
+pattern Strategy \cite{src:retrieval} :
+
+\textbf{Recherche dense (vectorielle)} : la requête est encodée en un vecteur
+1024d via le même modèle d'embedding. Une requête SQL avec l'opérateur de
+distance cosinus \texttt{<=>} de pgvector trouve les $k$ plus proches voisins,
+optionnellement filtrée par domaine juridique.
+
+\textbf{Recherche BM25 (lexicale)} : la recherche plein-texte PostgreSQL
+avec le dictionnaire arabe (\texttt{to\_tsvector(`arabic', ...)}) a été
+abandonnée en raison de performances insuffisantes. Un index BM25Okapi a
+été implémenté en mémoire avec un tokenizer arabe spécialisé
+\cite{src:tokenizer}. Le tokenizer applique : (1) la normalisation via
+l'\texttt{ArabicNormalizer} du projet, (2) l'extraction de mots par
+expression régulière Unicode (plage arabe), (3) la suppression de 60+ mots
+vides juridiques, et (4) le filtrage des tokens courts ($< 2$ caractères).
+Les scores BM25 sont calculés avec les paramètres par défaut ($k_1 = 1,5$,
+$b = 0,75$). Notre benchmark (section 5) confirme que cette approche atteint
+un Recall@5 de 41,67\% et un Hit@5 de 46,88\% sur 32 questions juridiques.
+
+\textbf{Reciprocal Rank Fusion (RRF)} : les $N$ meilleurs résultats de chaque
+stratégie ($N = 20$) sont fusionnés selon la formule :
+
+\[
+\text{RRF}(d) = \sum_{s \in \{dense, bm25\}} \frac{1}{k + r_s(d)}
+\]
+
+où $k = 60$ est la constante de fusion et $r_s(d)$ est le rang du document
+$d$ dans la liste de la stratégie $s$. Ce paramètre $k = 60$ a été choisi
+empiriquement pour équilibrer l'influence des deux stratégies.
+
+\subsubsection{Module de Génération (LLM)}
+
+Le module de génération \cite{src:generation} construit un prompt structuré
+à partir des articles récupérés et appelle un LLM distant. Le prompt inclut :
+
+\begin{enumerate}
+    \item Les \textbf{textes juridiques} récupérés, numérotés et sourcés
+    \item Une \textbf{instruction système} en arabe spécifiant le rôle
+    (assistant juridique marocain), la règle de grounding (répondre
+    uniquement à partir des textes fournis), et le format de sortie
+    \item La \textbf{question} de l'utilisateur
+\end{enumerate}
+
+Le LLM utilisé est Gemma 4 2B \cite{google2025gemma4}, quantifié en
+Q4\_K\_XL et servi via llama.cpp \cite{gerganov2023llamacpp} sur un GPU
+NVIDIA T4 (16 Go VRAM) hébergé sur Google Colab, accessible via un tunnel
+Cloudflare. Le service LLM expose une API REST (\texttt{/generate},
+\texttt{/health}) et gère le chargement du modèle, l'inférence, et le
+streaming. La température est fixée à 0,3 pour favoriser la reproductibilité
+des réponses, avec \texttt{max\_tokens}=4096 et \texttt{top\_p}=0,9.
+
+La réponse générée est parsée en trois sections :
+\begin{itemize}
+    \item \textbf{Réponse courte} : résumé direct (1-2 phrases)
+    \item \textbf{Analyse juridique} : explication détaillée avec citations
+    \item \textbf{Exemple pratique} : application concrète (optionnel)
+\end{itemize}
+
+Un disclaimer automatique est ajouté à chaque réponse précisant la nature
+automatique de la génération.
+
+\subsection{Infrastructure de Données}
+
+La base de données PostgreSQL 16 avec l'extension pgvector 0.7.4 stocke :
+
+\begin{itemize}
+    \item \texttt{legal\_chunks} : articles avec embedding vector(1024),
+    métadonnées (domaine, loi, article, chapitre, source), et index HNSW
+    \item \texttt{conversations} : historique Q\&R (session, rôle,
+    contenu, sources JSONB)
+    \item \texttt{app\_config} : configuration dynamique
+\end{itemize}
+
+\subsection{Interface Utilisateur}
+
+L'interface web \cite{src:web} est développée avec SvelteKit 5 et Tailwind
+CSS 4, avec support complet de l'arabe (RTL). Elle offre :
+
+\begin{itemize}
+    \item Page d'accueil avec champ de recherche juridique
+    \item Page de résultats avec réponses structurées et sources citées
+    \item Explorateur de lois avec arborescence hiérarchique
+    \item Historique des sessions Q\&R
+    \item Interface d'upload et de gestion des PDF
+    \item Tableau de bord de santé du système
+\end{itemize}
+
+L'application supporte le multilingue (arabe, français) avec un système
+d'internationalisation intégré.

@@ -1,0 +1,80 @@
+\section{Conclusion et Perspectives}
+
+\noindent Cet article a présenté la conception, l'implémentation et l'évaluation
+rigoureuse d'un système de Question-Réponse juridique marocain basé sur
+l'architecture Retrieval-Augmented Generation (RAG). Le système intègre une
+chaîne complète de traitement du langage naturel arabe — extraction PDF,
+nettoyage, normalisation arabe, analyse structurelle, indexation vectorielle,
+recherche hybride, et génération de réponses par LLM — dans une plateforme
+open-source modulaire et reproductible.
+
+\vspace{0.2cm}
+
+\noindent Les contributions principales de ce travail sont :
+
+\begin{enumerate}
+    \item \textbf{Une chaîne de NLP arabe complète et robuste} pour le
+    domaine juridique marocain, incluant un extracteur PDF multi-méthode
+    (pdfplumber, PyMuPDF, EasyOCR), un nettoyeur de bruit spécifique aux
+    textes juridiques, un normaliseur arabe standardisé, et un analyseur
+    structurel de codes de loi.
+    \item \textbf{Une architecture de recherche hybride dense + BM25 + RRF}
+    indexée dans PostgreSQL + pgvector avec index HNSW, démontrant que la
+    fusion par rangs améliore le Hit@5 à 68,75\% et le Recall@5 à 59,38\%.
+    \item \textbf{Le premier benchmark comparatif de cinq modèles d'embedding
+    multilingues} sur un corpus juridique arabe avec 65 variantes de requêtes,
+    établissant la supériorité des modèles 1024 dimensions (E5-large : MRR
+    0,81, précision de domaine 89\%).
+    \item \textbf{Une évaluation complète de la qualité des réponses générées}
+    par Gemma 4 2B, révélant une fidélité de 22\% comme axe d'amélioration
+    prioritaire.
+\end{enumerate}
+
+\vspace{0.2cm}
+
+\noindent Le tableau~\ref{tab:comparaison} positionne notre système par rapport
+aux alternatives existantes pour le droit marocain.
+
+\begin{table}[H]
+\centering
+\caption{Comparaison avec les solutions existantes}
+\label{tab:comparaison}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Capacité} & \textbf{Google} & \textbf{legislation.ma} & \textbf{ChatGPT} & \textbf{LLM seul} & \textbf{Notre système} \\
+\midrule
+Recherche sémantique arabe & Non & Non & Non & Non & \textbf{Oui} \\
+Réponses générées & Non & Non & Oui & Oui & \textbf{Oui} \\
+Citations d'articles & -- & -- & Parfois & Parfois & \textbf{Oui} \\
+Ancrage dans les sources & -- & -- & Non & Non & \textbf{Oui} \\
+Open-source & -- & -- & Non & Variable & \textbf{Oui} \\
+Déploiement local (Docker) & -- & -- & Non & Variable & \textbf{Oui} \\
+Corpus juridique marocain & Partiel & Oui & Non & Non & \textbf{Oui} (7 domaines) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Les résultats confirment la viabilité de l'approche RAG pour le
+question-réponse juridique arabe. Les trois campagnes de benchmark ont
+démontré : (1) la supériorité des modèles d'embedding 1024 dimensions
+(E5-large : MRR 0,81, précision de domaine 89\%) ; (2) l'efficacité de la
+recherche hybride Dense + RRF (Hit@5 = 68,8\%, Recall@5 = 59,4\%) ; (3) la
+faisabilité d'un déploiement léger via un LLM quantifié de $\sim$1,1 Go.
+
+\vspace{0.2cm}
+
+\noindent Les limites identifiées — gap dialectal Darija--MSA (29\%), latence
+du pipeline (13--14~s), couverture partielle du corpus, domaine fiscal
+inaccessible — définissent une feuille de route claire : fine-tuning
+embedding sur corpus juridique, déploiement local de l'embedding, et
+évaluation par LLM-as-judge pour une mesure plus juste de la fidélité.
+
+\vspace{0.2cm}
+
+\noindent Au-delà de ses résultats techniques, ce projet démontre le potentiel
+de l'architecture RAG pour démocratiser l'accès au droit dans les pays où la
+barrière linguistique et la dispersion des sources constituent un obstacle
+majeur. La méthodologie développée — extraction OCR+VLM, normalisation arabe,
+embedding multilingue, recherche hybride, génération ancrée — est transposable
+à d'autres corpus juridiques arabophones (Tunisie, Algérie, Égypte) avec un
+effort de localisation minimal.

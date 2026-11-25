@@ -1,0 +1,240 @@
+\chapter{Etat de l'Art}
+
+\section{Introduction}
+
+Ce chapitre presente une revue de la litterature couvrant les domaines fondamentaux sur lesquels repose le projet Moroccan Legal RAG. Nous abordons successivement le traitement automatique du langage arabe (Arabic NLP), les systemes de recherche d'information juridique (Legal IR), l'architecture Retrieval-Augmented Generation (RAG), les techniques de quantification de LLMs pour le deploiement leger, et les defis specifiques au traitement des documents juridiques marocains.
+
+\section{Traitement Automatique de la Langue Arabe (Arabic NLP)}
+
+\subsection{Particularites Linguistiques de l'Arabe}
+
+La langue arabe presente des defis uniques pour le traitement automatique :
+
+\begin{itemize}
+    \item \textbf{Morphologie complexe} : L'arabe est une langue a morphologie riche. Un meme mot peut prendre de nombreuses formes selon le genre, le nombre, la personne, le temps, et le mode. Par exemple, le verbe \textit{kataba} (ecrire) peut generer des dizaines de formes derivees.
+    
+    \item \textbf{Systeme de racines} : La plupart des mots arabes derivent de racines trilitteres (trois consonnes). Les mots partageant la meme racine sont semantiquement lies, ce qui constitue a la fois une opportunite (regroupement semantique) et un defi (ambiguite).
+    
+    \item \textbf{Diacritiques} : Les signes diacritiques (\textit{tashkil}) indiquent les voyelles courtes et modifient le sens des mots. Leur presence est irreguliere dans les textes juridiques, ou ils apparaissent principalement pour lever des ambiguites.
+    
+    \item \textbf{Diglossie} : Le monde arabe est caracterise par une situation de diglossie ou coexistent l'arabe standard moderne (MSA, utilise a l'ecrit et dans les contextes formels) et les dialectes regionaux comme le darija marocain. Dans le domaine juridique, l'arabe standard predomine, mais les citoyens utilisent le darija pour formuler leurs questions.
+\end{itemize}
+
+\subsection{Normalisation et Pretraitement}
+
+Les travaux de \textsc{Darwish} (2014) et \textsc{Al-Khalifa} (2019) ont etabli les fondements de la normalisation du texte arabe pour la recherche d'information. Les etapes essentielles appliquees dans le cadre de ce projet comprennent :
+
+\begin{enumerate}
+    \item \textbf{Unification des variantes de l'alef} : Les caracteres \textit{alef} (\begin{otherlanguage}{arabic}ا\end{otherlanguage}), \textit{alef avec hamza} (\begin{otherlanguage}{arabic}أ\end{otherlanguage}, \begin{otherlanguage}{arabic}إ\end{otherlanguage}), et \textit{alef madda} (\begin{otherlanguage}{arabic}آ\end{otherlanguage}) sont unifies en \begin{otherlanguage}{arabic}ا\end{otherlanguage}.
+    \item \textbf{Suppression du tatweel} : Le caractere d'allongement \textit{kashida} (\begin{otherlanguage}{arabic}ـ\end{otherlanguage}) est supprime pour eviter la fragmentation des mots.
+    \item \textbf{Suppression des diacritiques} : Les voyelles courtes sont retirees, sauf dans les cas ou leur presence modifie le sens juridique.
+    \item \textbf{Normalisation Unicode} : Application des formes de normalisation NFKC pour uniformiser les codages equivalents.
+    \item \textbf{Tokenisation arabe specialisee} : Un tokenizer dedie avec 60+ stop words juridiques a ete developpe pour isoler les termes discriminants (noms de lois, concepts juridiques, numeros d'articles).
+\end{enumerate}
+
+\subsection{Modeles de Langue et d'Embedding pour l'Arabe}
+
+L'avenement des modeles de langue pre-entraines a considerablement fait progresser le NLP arabe :
+
+\begin{itemize}
+    \item \textbf{AraBERT} (\textsc{Antoun et al.}, 2020) : Base sur l'architecture BERT, pre-entraine sur un corpus de textes arabes modernes. Performances etat-de-l'art sur les taches de classification et d'extraction d'information en arabe standard.
+    
+    \item \textbf{CAMeL-Tools} (\textsc{Obeid et al.}, 2020) : Suite d'outils open-source pour le NLP arabe developpee par le CAMeL Lab. Inclut la tokenisation, la lemmatisation, et l'analyse morphologique -- utilisee comme reference dans ce projet.
+    
+    \item \textbf{Multilingual-E5-large} (\textsc{Wang et al.}, 2024) : Modele d'embedding multilingue de 560 millions de parametres produisant des vecteurs de dimension 1024. Selectionne comme modele principal de ce projet apres un benchmark systematique de 5 modeles sur 65 variantes de requetes juridiques. Il a obtenu les meilleurs scores (P@5 = 0.72, MRR = 0.81) sur l'arabe juridique marocain.
+    
+    \item \textbf{BGE-M3} (\textsc{Chen et al.}, 2024) : Modele d'embedding multilingue de 568 millions de parametres (1024 dimensions), utilise comme alternative dans notre pipeline. Performances legerement inferieures a E5-large sur le corpus juridique marocain (P@5 = 0.69).
+    
+    \item \textbf{LaBSE} (\textsc{Feng et al.}, 2022) : Modele d'embedding de 768 dimensions, excellent pour le francais juridique -- utilise comme modele de fallback CPU.
+\end{itemize}
+
+\section{Recherche d'Information Juridique (Legal IR)}
+
+\subsection{Systemes Traditionnels}
+
+La recherche d'information juridique a historiquement repose sur des approches booleennes et des index inverses. Les systemes commerciaux comme \textit{Westlaw}, \textit{LexisNexis}, et \textit{Doctrine.fr} utilisent des moteurs de recherche bases sur des mots-cles avec des filtres juridiques.
+
+Au Maroc, les initiatives de numerisation du droit comprennent :
+
+\begin{itemize}
+    \item \textbf{ADALA} : Base de donnees juridique marocaine en ligne proposant un acces aux textes de loi, a la jurisprudence, et aux circulaires.
+    \item \textbf{SGG (Secretariat General du Gouvernement)} : Portail officiel de publication des textes de loi au Bulletin Officiel.
+    \item \textbf{Ministere de la Justice} : Portail de la legislation marocaine avec acces aux codes et lois.
+\end{itemize}
+
+Ces systemes reposent principalement sur la recherche par mots-cles et ne proposent ni recherche semantique, ni generation automatisee de reponses, ni ancrage dans les sources.
+
+\subsection{Approches Neuronales}
+
+Les travaux recents en Legal IR exploitent les modeles de langue neuronaux :
+
+\begin{itemize}
+    \item \textbf{Legal-BERT} (\textsc{Chalkidis et al.}, 2020) : BERT specialise pour le domaine juridique, pre-entraine sur des corpus legaux. Ameliorations significatives sur la classification de documents juridiques.
+    
+    \item \textbf{Caselaw Access Project} : Projet de numerisation et d'indexation de la jurisprudence americaine utilisant des techniques de NLP pour l'extraction de citations et la recherche semantique.
+    
+    \item \textbf{COLIEE} (Competition on Legal Information Extraction/Entailment) : Competition internationale annuelle evaluant les systemes de recherche d'information juridique et de raisonnement legal automatise.
+\end{itemize}
+
+\subsection{Limites de la Recherche Lexicale Pure}
+
+Notre benchmark interne (32 questions reparties sur 7 domaines juridiques marocains) a revele que la recherche plein-texte PostgreSQL avec le dictionnaire arabe (\texttt{to\_tsvector(`arabic', ...)}) echoue systematiquement pour les requetes juridiques en arabe (0 resultat sur 32 questions). Ce constat a motive le developpement d'une recherche lexicale alternative basee sur \texttt{rank-bm25} avec un tokenizer arabe specialise integrant :
+
+\begin{itemize}
+    \item Extraction de mots par expression reguliere Unicode (plage arabe)
+    \item Suppression de 60+ mots vides juridiques
+    \item Normalisation prealable via l'\texttt{ArabicNormalizer} du projet
+    \item Filtrage des tokens courts ($< 2$ caracteres)
+\end{itemize}
+
+\subsection{Recherche Hybride pour le Droit}
+
+La specificite du langage juridique --- melant terminologie precise et concepts abstraits --- rend les approches hybrides particulierement pertinentes. \textsc{Shao et al.} (2023) ont demontre que la combinaison de recherche semantique (dense) et de recherche lexicale (BM25) via Reciprocal Rank Fusion (RRF) offrait les meilleurs resultats pour les requetes juridiques. Notre systeme implemente cette approche avec :
+
+\begin{itemize}
+    \item \textbf{Canal dense} : Similarite cosinus via pgvector (indexation HNSW, m=16)
+    \item \textbf{Canal lexical} : BM25 avec le tokenizer arabe specialise
+    \item \textbf{Fusion RRF} : Reciprocal Rank Fusion avec k=60, sans parametre a regler
+\end{itemize}
+
+\section{Architecture Retrieval-Augmented Generation (RAG)}
+
+\subsection{Principe Fondamental}
+
+L'architecture RAG, introduite par \textsc{Lewis et al.} (2020), combine un modele de recherche d'information (retriever) et un modele de generation de texte (generator). Le principe implemente dans ce projet est le suivant :
+
+\begin{enumerate}
+    \item \textbf{Ingestion} : Les documents juridiques (PDF) sont extraits par OCR, corriges par VLM, nettoyes, normalises, structures en articles, et transformes en vecteurs de 1024 dimensions (embedding E5-large) stockes dans PostgreSQL + pgvector.
+    \item \textbf{Recherche hybride} : La requete en arabe est traitee simultanement par le canal dense (cosine similarity) et le canal lexical (BM25 avec tokenizer arabe), puis fusionnee par RRF.
+    \item \textbf{Augmentation contextuelle} : Les K articles les plus pertinents sont inseres dans un prompt structure avec instruction de fidelite au contexte.
+    \item \textbf{Generation enrichie} : Le LLM genere une reponse juridique complete en arabe (resume, analyse, verdict, sources) en s'appuyant exclusivement sur les articles fournis. L'enrichissement contextuel (synthese multi-sources, references croisees, conclusions juridiques) est un comportement souhaite et ancre, distinct de l'hallucination.
+\end{enumerate}
+
+\subsection{Avantages pour le Domaine Juridique}
+
+L'architecture RAG presente des avantages decisifs pour les applications juridiques :
+
+\begin{itemize}
+    \item \textbf{Ancrage factuel} : Les reponses sont fondees sur des sources verifiables. Les enrichissements contextuels (verdicts, synthese) derivent des articles retrouves.
+    \item \textbf{Tra\c{c}abilite} : Chaque reponse cite les numeros d'articles et les lois sources.
+    \item \textbf{Mise a jour} : La base de connaissances peut etre mise a jour par simple re-indexation, sans re-entrainement du LLM.
+    \item \textbf{Specialisation juridictionnelle} : Le systeme se limite aux textes de loi marocains, evitant les confusions avec d'autres droits nationaux.
+\end{itemize}
+
+\subsection{Travaux Connexes}
+
+Plusieurs projets recents appliquent le paradigme RAG au domaine juridique :
+
+\begin{itemize}
+    \item \textbf{SAIL-Legal} (\textsc{Huang et al.}, 2024) : Systeme RAG pour le droit chinois utilisant une base de donnees vectorielle et un modele de langage specialise.
+    
+    \item \textbf{LexGPT} (\textsc{Zhou et al.}, 2023) : Assistant juridique base sur GPT-4 avec augmentation par recherche dans des bases de donnees juridiques.
+    
+    \item \textbf{Indian Legal RAG} (\textsc{Sharma et al.}, 2024) : Systeme RAG pour le droit indien integrant la recherche semantique multilingue (anglais et hindi).
+\end{itemize}
+
+Aucun de ces systemes ne traite specifiquement le droit marocain en langue arabe avec une architecture legerement deployable (LLM quantifie, Docker Compose), ce qui constitue la contribution originale de ce projet.
+
+\section{Quantification de LLMs pour le Deploiement Leger}
+
+\subsection{Principe de la Quantification}
+
+Les modeles de langage modernes contiennent des milliards de parametres en virgule flottante (FP16, FP32), rendant leur deploiement couteux en memoire et en calcul. La quantification reduit la precision des poids du modele pour diminuer l'empreinte memoire et accelerer l'inference :
+
+\begin{itemize}
+    \item \textbf{FP16 (origine)} : 2 octets par parametre. Un modele de 2B parametres occupe $\sim$4 Go en memoire.
+    \item \textbf{INT8 (Q8\_0)} : 1 octet par parametre. Memoire divisee par 2, perte de qualite negligeable ($< 0.5\%$).
+    \item \textbf{INT4 (Q4\_K\_XL)} : 0.5 octet par parametre. Memoire divisee par 4, perte de qualite maitrisee ($< 2\%$).
+\end{itemize}
+
+\subsection{Format GGUF et llama.cpp}
+
+Le format \textbf{GGUF} (GPT-Generated Unified Format), introduit par la communaute llama.cpp, est devenu le standard de facto pour la distribution de modeles quantifies :
+
+\begin{itemize}
+    \item \textbf{Portabilite} : Un seul fichier contenant les poids, la configuration, et le tokenizer.
+    \item \textbf{Inference CPU+GPU hybride} : llama.cpp repartit automatiquement les couches entre CPU et GPU selon la memoire disponible.
+    \item \textbf{Formats de quantification} : Q2\_K a Q8\_0, avec des variantes optimisees (K\_S, K\_M, K\_L, K\_XL) pour differents compromis vitesse/qualite.
+\end{itemize}
+
+\subsection{Application au Projet}
+
+Dans le cadre de ce projet, le modele \textbf{Gemma 4 2B} (Google, 2025) a ete selectionne et quantifie en Q4\_K\_XL :
+
+\begin{itemize}
+    \item \textbf{Taille originale (FP16)} : $\sim$4 Go
+    \item \textbf{Taille quantifiee (Q4\_K\_XL)} : $\sim$1.1 Go (reduction de 73\%)
+    \item \textbf{Inference} : llama.cpp avec GPU layers = -1 (tous sur GPU T4 Colab, $\sim$2-5s par generation)
+    \item \textbf{Contexte maximal} : 16 384 tokens
+    \item \textbf{Temperature} : 0.3 (favorisant la fidelite au contexte sur la creativite)
+\end{itemize}
+
+Cette configuration permet un deploiement sur du materiel modeste (GPU T4 gratuit via Google Colab, ou CPU local pour les tests) tout en maintenant une qualite de generation acceptable pour des reponses juridiques structurees et tracables.
+
+\section{Traitement des Documents PDF Juridiques Marocains}
+
+\subsection{Defis Specifiques}
+
+L'extraction de texte a partir de documents PDF juridiques marocains presente des defis uniques qui ont guide les choix techniques du projet :
+
+\begin{itemize}
+    \item \textbf{Documents numerises} : La majorite des textes de loi marocains existent uniquement sous forme de scans (Bulletins Officiels), necessitant une etape d'OCR. Le projet utilise EasyOCR avec acceleration GPU pour la reconnaissance du texte arabe.
+    
+    \item \textbf{Mise en page complexe} : Les documents officiels utilisent des mises en page multi-colonnes, avec en-tetes, pieds de page, et notes marginales -- necessitant un nettoyage structurel (LegalTextCleaner) avant la normalisation.
+    
+    \item \textbf{Mixite linguistique} : Les documents contiennent de l'arabe et du francais sur la meme page, exigeant une segmentation par detection de script Unicode.
+    
+    \item \textbf{Qualite variable} : Les scans historiques peuvent etre degrades. Pour y remedier, le projet utilise un modele de vision (VLM) --- Gemma 4 en mode vision --- pour corriger les erreurs de reconnaissance post-OCR.
+\end{itemize}
+
+\subsection{Correction Post-OCR par VLM}
+
+Les travaux de \textsc{Benajiba et al.} (2023) sur la correction post-OCR pour l'arabe ont identifie les erreurs frequentes :
+
+\begin{itemize}
+    \item Confusion entre caracteres visuellement similaires (\begin{otherlanguage}{arabic}ت\end{otherlanguage} / \begin{otherlanguage}{arabic}ث\end{otherlanguage} / \begin{otherlanguage}{arabic}ب\end{otherlanguage})
+    \item Segmentation incorrecte des mots lies
+    \item Omission ou insertion de points diacritiques
+    \item Inversion de l'ordre des caracteres dans les textes bidirectionnels
+\end{itemize}
+
+Notre approche de correction utilise un prompt VLM specialise : \textit{<Corrige UNIQUEMENT les erreurs de reconnaissance optique. NE TRADUIS PAS. NE RESUMES PAS.>} Le traitement est effectue article par article avec un systeme de checkpoint/reprise pour les longs documents.
+
+\section{Segmentation et Chunking des Textes Juridiques}
+
+La segmentation des textes de loi en unites exploitables est critique pour la qualite de la recherche. Les approches evaluees sont :
+
+\begin{itemize}
+    \item \textbf{Segmentation par article} : Decoupage aux frontieres des articles (\textit{المادة X}). Cette approche, retenue pour le projet, preserve l'integrite semantique de chaque disposition legale et facilite la citation dans les reponses generees.
+    \item \textbf{Segmentation par clause} : Decoupage au niveau des alineas, non retenu car trop fragmentaire pour le contexte juridique.
+    \item \textbf{Segmentation par fenetre} : Approche de secours pour les documents sans structure explicite.
+\end{itemize}
+
+\section{Synthese et Positionnement du Projet}
+
+L'etat de l'art revele plusieurs constats determinants pour le positionnement du projet :
+
+\begin{enumerate}
+    \item \textbf{Absence de systeme RAG pour le droit marocain en arabe} : Aucun travail academique ou commercial n'a applique l'architecture RAG au corpus juridique marocain avec une stack exclusivement arabophone.
+
+    \item \textbf{Insuffisance des outils standards pour l'arabe juridique} : Les dictionnaires PostgreSQL arabic et les tokenizers naifs (split sur espaces) echouent systematiquement sur le corpus juridique, motivant le developpement d'outils specialises (tokenizer arabe avec 60+ stop words juridiques, normaliseur dedie).
+
+    \item \textbf{Maturite des embeddings multilingues} : Les modeles E5-large et BGE-M3 atteignent des performances suffisantes pour la recherche semantique juridique en arabe (P@5 $\sim$72\%, MRR $\sim$81\% sur notre benchmark).
+
+    \item \textbf{Viabilite de la quantification pour le deploiement} : La quantification GGUF Q4\_K\_XL permet de deployer un LLM de 2B parametres sur GPU modeste ($\sim$1.1 Go) avec une perte de qualite acceptable ($< 2\%$).
+
+    \item \textbf{Pertinence de la recherche hybride} : La combinaison de recherche semantique (dense) et lexicale (BM25 avec tokenizer arabe) via RRF est particulierement adaptee aux requetes juridiques, combinant comprehension semantique et precision terminologique.
+
+    \item \textbf{Enrichissement contextuel vs hallucination} : Dans le domaine juridique, la synthese multi-sources, les references croisees d'articles, et la formulation de verdicts sont des comportements souhaites du LLM, a condition qu'ils soient ancres dans les documents retrouves. La distinction entre enrichissement contextuel legitime et hallucination constitue un axe de recherche identifie mais non resolu par les metriques standard (token-overlap).
+\end{enumerate}
+
+Le projet \textbf{Moroccan Legal RAG} se positionne comme la premiere application de l'architecture RAG au droit marocain en langue arabe, integrant :
+
+\begin{itemize}
+    \item Un pipeline complet d'ingestion : PDF scanne $\to$ EasyOCR $\to$ correction VLM $\to$ nettoyage $\to$ normalisation arabe $\to$ structuration en articles
+    \item Une recherche hybride (dense + BM25 arabe + RRF) avec tokenisation adaptee
+    \item Un LLM leger quantifie (Gemma 4 2B, Q4\_K\_XL GGUF, llama.cpp) deployable sur materiel modeste
+    \item Une evaluation systematique via un benchmark de 32 questions sur 7 domaines juridiques, avec 5 metriques (Precision, Recall, MRR, Relevance, Faithfulness)
+    \item Une interface web (SvelteKit) et une API REST (FastAPI) operationnelles
+    \item Une infrastructure conteneurisee (Docker Compose) avec service d'embedding GPU distant (Colab + Cloudflare Tunnel)
+\end{itemize}

@@ -1,0 +1,159 @@
+\section{Méthodologie}
+
+Cette section décrit la méthodologie expérimentale employée pour évaluer
+les performances du système, incluant le protocole de benchmark des modèles
+d'embedding, l'évaluation des stratégies de recherche, et la métrique de
+qualité des réponses générées.
+
+\subsection{Benchmark des Modèles d'Embedding}
+
+\subsubsection{Corpus de Test}
+
+Un corpus de 26 articles juridiques marocains a été constitué, couvrant cinq
+domaines : pénal (7 articles, n° 147--436), trafic (5 articles, n° 172--180),
+familial (5 articles, n° 48--78), civil (4 articles, n° 1--100), et
+commercial (4 articles, n° 1--55). Chaque article a été soigneusement
+sélectionné pour inclure des articles proches (hard negatives) — par exemple,
+l'article 147 (vol simple) et l'article 148 (vol aggravé) du Code Pénal —
+afin de tester la capacité des modèles à discriminer des textes
+juridiquement distincts mais sémantiquement similaires.
+
+\subsubsection{Variantes de Requêtes}
+
+Pour chaque groupe d'articles, cinq à sept variantes de requêtes ont été
+générées :
+
+\begin{itemize}
+    \item \textbf{Arabe formel} : question en arabe standard moderne
+    (\textarabic{\texttt{ما هي عقوبة السرقة البسيطة؟}})
+    \item \textbf{Darija marocain} : même question en dialecte marocain
+    (\textarabic{\texttt{شنو هي العقوبة ديال السرقة؟}})
+    \item \textbf{Court (keywords)} : 2-3 mots-clés
+    (\textarabic{\texttt{عقوبة السرقة}})
+    \item \textbf{Long (descriptif)} : phrase descriptive détaillée
+    (\textarabic{\texttt{أريد معرفة العقوبة المقررة قانونا لجريمة السرقة البسيطة وفق
+    القانون الجنائي المغربي}})
+    \item \textbf{Cross-lingue français} : question en français
+    (\texttt{Quelle est la peine pour le vol simple au Maroc?})
+    \item \textbf{Cross-lingue anglais} : question en anglais
+    (\texttt{What is the penalty for simple theft in Morocco?})
+\end{itemize}
+
+Au total, 65 variantes de requêtes ont été évaluées.
+
+\subsubsection{Modèles Évalués}
+
+Cinq modèles d'embedding multilingues ont été comparés :
+
+\begin{table}[H]
+\centering
+\caption{Modèles d'embedding évalués}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llc}
+\toprule
+\textbf{Modèle} & \textbf{Identifiant} & \textbf{Dim.} \\
+\midrule
+E5-large & \texttt{intfloat/multilingual-e5-large} & 1024 \\
+BGE-M3   & \texttt{BAAI/bge-m3}                 & 1024 \\
+LaBSE    & \texttt{sentence-transformers/LaBSE}  & 768  \\
+MPNet    & \texttt{paraphrase-multilingual-mpnet-base-v2} & 768 \\
+E5-base  & \texttt{intfloat/multilingual-e5-base} & 768  \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Tous les modèles ont été chargés via \texttt{sentence-transformers} avec
+normalisation L2 des embeddings. L'évaluation a été effectuée sur GPU
+lorsque disponible.
+
+\subsubsection{Métriques}
+
+Pour chaque paire (modèle, variante), la similarité cosinus entre
+l'embedding de la requête et les embeddings des 26 articles a été calculée.
+Les métriques suivantes ont été agrégées sur tous les groupes de requêtes :
+
+\begin{itemize}
+    \item \textbf{Précision@k} ($k \in \{1,3,5\}$) : proportion de requêtes
+    où l'article pertinent est dans les $k$ premiers résultats
+    \item \textbf{MRR} (Mean Reciprocal Rank) : moyenne du rang inverse de
+    l'article pertinent
+    \item \textbf{NDCG@5} (Normalized Discounted Cumulative Gain) : qualité
+    du classement pondérée par la position
+    \item \textbf{Précision de domaine} : proportion de requêtes où le
+    meilleur résultat appartient au domaine juridique correct
+    \item \textbf{Hit@10} : proportion de requêtes où l'article pertinent
+    est dans les 10 premiers résultats
+\end{itemize}
+
+\subsection{Benchmark des Stratégies de Recherche}
+
+\subsubsection{Configuration Expérimentale}
+
+Un benchmark a été conçu pour comparer les trois stratégies de recherche
+implémentées : dense (pgvector cosine), BM25 (rank-bm25 avec tokenizer
+arabe), et RRF (fusion des deux). Le jeu de test comprend 32 questions
+juridiques couvrant 7 domaines (trafic, pénal, familial, civil, commercial,
+violations, entreprises), avec un top\_k=5.
+
+\subsubsection{Métriques de Recherche}
+
+\begin{itemize}
+    \item \textbf{Precision@5} : proportion d'articles pertinents parmi
+    les 5 résultats
+    \item \textbf{Recall@5} : proportion d'articles pertinents retrouvés
+    \item \textbf{MRR@5} : Mean Reciprocal Rank
+    \item \textbf{NDCG@5} : Discounted Cumulative Gain normalisé
+    \item \textbf{Hit@5} : proportion de questions avec au moins un
+    article pertinent dans les résultats
+\end{itemize}
+
+\subsubsection{Métriques de Génération}
+
+Pour chaque stratégie, les articles récupérés ont été passés au LLM (Gemma 4
+2B, température 0,3, max\_tokens=512) pour générer une réponse. Cinq métriques
+ont été évaluées :
+
+\begin{itemize}
+    \item \textbf{Answer Relevance} : similarité cosinus entre les embeddings
+    de la question et de la réponse (0--1)
+    \item \textbf{Faithfulness} : proportion de phrases de la réponse
+    ancrables dans les documents retrouvés par chevauchement lexical (0--1)
+    \item \textbf{Answer Correctness} : score composite ROUGE-L + BERTScore
+    F1 (0--1)
+\end{itemize}
+
+\subsubsection{Analyse par Domaine et Niveau de Difficulté}
+
+Les 32 questions du benchmark RAG complet ont été réparties sur 7 domaines
+juridiques (pénal, trafic, familial, civil, commercial, fiscal, judiciaire)
+et classées en trois niveaux de difficulté : \textit{easy} (10 questions,
+vocabulaire général, un article attendu), \textit{medium} (11 questions,
+deux articles attendus), et \textit{hard} (11 questions, vocabulaire technique
+spécifique, articles adjacents à discriminer). Cette stratification permet
+d'identifier les faiblesses spécifiques du système par domaine et par type
+de requête.
+
+\subsubsection{Significativité Statistique}
+
+Pour le benchmark d'embedding, des tests $t$ de Student appariés ont été
+appliqués entre chaque paire de modèles afin de déterminer si les différences
+observées sont statistiquement significatives ($\alpha = 0,05$).
+
+\subsection{Implémentation et Reproductibilité}
+
+L'ensemble du système est conteneurisé via Docker Compose. Les services
+suivants sont définis :
+
+\begin{itemize}
+    \item \textbf{PostgreSQL + pgvector} : base de données vectorielle
+    avec pgAdmin pour la gestion
+    \item \textbf{Service LLM} : Gemma 4 2B via llama.cpp, exposé sur
+    le port 8001
+    \item \textbf{API FastAPI} : application principale (port 8000)
+    \item \textbf{Frontend SvelteKit} : interface utilisateur (port 5173)
+\end{itemize}
+
+Les benchmarks d'embedding et de recherche sont reproduisibles via les
+notebooks Jupyter dans le dossier \texttt{notebooks/}, et les résultats
+sont stockés dans \texttt{benchmark/output/}.

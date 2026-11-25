@@ -1,0 +1,107 @@
+\section{Related Works}
+
+\lettrine[lines=2]{\color{titleblue}{T}}{he} application of NLP to the legal
+domain has attracted growing interest in recent years. This section examines
+existing work in three areas: legal Q\&A and RAG systems, Arabic language
+models and embeddings, and hybrid search strategies.
+
+\subsection{Legal RAG and Q\&A Systems}
+
+The RAG architecture, introduced by \cite{lewis2020retrieval}, combines a
+retriever (typically Dense Passage Retrieval) with a sequence generator
+(BART or T5) to produce contextualized responses. Since then, several
+specialized RAG systems have emerged in the legal domain.
+\cite{louis2023legal} presents Legal-RAG for Indian law using multilingual
+embeddings and a fine-tuned LLM, achieving 72\% accuracy on Indian Legal
+Queries. \cite{nguyen2023vietnamese} develops a similar system for
+Vietnamese law, demonstrating the importance of linguistic and cultural
+adaptation. Closer to our context, \cite{alshareef2023arabic} proposes a
+Q\&A system for Saudi law using AraBERT and Elasticsearch for lexical
+search, achieving 68\% accuracy on 100 Arabic legal questions.
+\cite{elaraby2024legal} presents a RAG system for Egyptian law with
+multilingual embeddings and a remote LLM. \cite{sharma2024indian} proposes
+Indian Legal RAG with hybrid search, while \cite{huang2024sail} presents
+SAIL-Legal for Chinese law with distributed vector indexing.
+\cite{zhou2023lexgpt} develops LexGPT, a GPT-4-based legal assistant with
+retrieval augmentation. Our work extends these approaches by proposing a
+complete architecture with advanced hybrid search and systematic
+benchmarking on Moroccan law.
+
+\subsection{Arabic NLP for the Legal Domain}
+
+Arabic NLP presents well-documented challenges \cite{habash2010arabic}.
+The rich derivational morphology (triliteral roots, patterns, affixes),
+diglossia (MSA vs. dialects), and ambiguous orthography (alef variants,
+tatweel, ligatures) make linguistic preprocessing crucial. In the legal
+domain specifically, \cite{zaghouani2021arabic} highlights the complexity
+of Arabic legal vocabulary, characterized by fixed formulas, French and
+English borrowings, and elaborate syntax. \cite{benali2025moroccan} notes
+that Moroccan legal Arabic systems must handle very long sentences (often
+over 100 words per article), a high degree of co-reference, non-standard
+abbreviations, and frequent Arabic-French code-switching.
+\cite{nassif2024arabic} provides a comprehensive survey of recent Arabic
+NLP advances, confirming that rich morphology and diglossia remain open
+challenges. Tools such as CAMeL Tools \cite{obaraj2021cameltools} offer
+morphological analyzers for standard Arabic, though their application to
+legal text requires adaptation.
+
+\subsection{Multilingual Embedding Models}
+
+Embedding model choice is crucial in any RAG system. For Arabic,
+\cite{ali2022arabic} compares LaBSE, XLM-R, and AraBERT, concluding that
+LaBSE offers the best cross-lingual performance. \cite{wang2023bge}
+introduces BGE-M3, a multi-granularity model supporting 100+ languages.
+\cite{liang2023multilingual} presents E5-large, based on contrastive
+pre-training. Both BGE-M3 and E5-large produce 1024-dimension embeddings,
+offering superior representational capacity over 768-dimension models.
+Our benchmark (Section V) is the first to systematically compare these five
+models on Arabic legal text with multilingual query variants.
+
+\subsection{Hybrid Search Strategies}
+
+Dense (vector) search captures semantic similarity but may miss exact lexical
+matches. BM25 excels at exact matching but ignores semantic context
+\cite{robertson2009bm25}. Reciprocal Rank Fusion (RRF) \cite{cormack2009reciprocal}
+is a parameter-free fusion method that combines rankings from multiple
+systems. \cite{shao2023hybrid} demonstrates that hybrid Dense + BM25 + RRF
+offers the best results for legal queries. Our benchmark confirms these
+findings in the Arabic legal domain, with Hit@5 improving from 65.62\%
+(dense) to 68.75\% (RRF).
+
+\subsection{Large Language Models for Arabic}
+
+Gemma 4 \cite{google2025gemma4} is Google's fourth-generation open model,
+available in 2B and 9B sizes, supporting Arabic with competitive
+performance. Our system uses Gemma 4 2B in Q4\_K\_XL quantization via
+llama.cpp \cite{gerganov2023llamacpp}. Recent studies \cite{hendy2023llm}
+show that multilingual LLMs can correctly answer Arabic legal questions
+without specific fine-tuning, provided they receive relevant context via RAG.
+
+\subsection{Comparative Synthesis}
+
+Table~\ref{tab:related_synthesis} summarizes the technical characteristics
+of recent legal RAG systems compared to our proposal.
+
+\begin{table}[H]
+\centering
+\caption{Comparative synthesis of recent legal RAG systems}
+\label{tab:related_synthesis}
+\renewcommand{\arraystretch}{1.15}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{System} & \textbf{Domain} & \textbf{Search} & \textbf{Embedding} & \textbf{Best} \\
+\midrule
+Lewis+ (2020) & General & DPR & BERT & 68\% (R@20) \\
+Louis+ (2023) & Indian & Dense (FAISS) & e5 & 72\% (P@1) \\
+Alshareef+ (2023) & Saudi & Lexical (ES) & AraBERT & 68\% (Acc.) \\
+Zhou+ (2023) & US & Hybrid (GPT-4) & Ada-002 & N/D \\
+Nguyen+ (2023) & Vietnamese & Dense (FAISS) & PhoBERT & 65\% (Acc.) \\
+Elaraby+ (2024) & Egyptian & Hybrid (RRF) & E5-l. & 70\% (F1) \\
+Sharma+ (2024) & Indian & Hybrid (RRF) & MuRIL & 73.5\% (MRR) \\
+Huang+ (2024) & Chinese & Hybrid (Dist.) & BGE & 76.2\% (H@5) \\
+\textbf{Our system} & \textbf{Moroccan} & \textbf{Hybrid (RRF)} & \textbf{E5-l. 1024d} & \textbf{81\% (MRR)} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

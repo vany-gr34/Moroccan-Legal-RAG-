@@ -1,0 +1,61 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Embedding-Model Performance}
+
+The superiority of 1024-dimension models (E5-large, BGE-M3) over 768-dimension
+models confirms the importance of representational capacity for Arabic legal
+vocabulary. The extra 256 dimensions encode fine semantic nuances crucial for
+distinguishing close articles such as simple theft (Art.~147) from aggravated
+theft (Art.~148) in the Moroccan Penal Code. The gap between E5-large and
+BGE-M3 is not statistically significant ($p = 0.08$), making them
+interchangeable for production. The small performance drop for cross-lingual
+queries (French MRR 0.85 vs.\ formal Arabic MRR 0.94) shows that modern
+multilingual embedding models have reached sufficient cross-lingual
+generalization for specialized applications.
+
+\subsection{BM25 Contribution}
+
+With the specialized Arabic tokenizer, BM25 now achieves non-zero scores
+(Recall@5 = 41.67\%, Hit@5 = 46.88\%), unlike the previous PostgreSQL FTS
+implementation that failed entirely. BM25 is particularly useful for
+article-number lookups and specific legal-term matching. In RRF, BM25
+contributes complementary results, improving Hit@5 from 65.62\% (dense) to
+68.75\% (RRF) and bringing RRF's MRR@5 (0.533) close to Dense's (0.565).
+
+\subsection{Faithfulness and Answer Quality}
+
+The measured faithfulness (0.47 for dense) should not be interpreted solely as
+a hallucination rate. Qualitative analysis reveals that the LLM produces
+legitimate contextual enrichment -- multi-article synthesis, structured
+citations, and reformulation of legislative language into accessible
+explanations -- that token-overlap metrics fail to capture. Recent surveys of hallucination
+in natural language generation~\cite{ji2023survey} similarly emphasize the
+need for multi-faceted faithfulness evaluation, and an
+LLM-as-judge evaluation~\cite{gao2023faithful} would provide a more accurate
+assessment. Answer relevance (0.69) is satisfactory, indicating that the LLM
+correctly addresses the question in most cases.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+  \item \textbf{Darija--MSA gap}: a 29\% relative performance drop confirms
+        Arabic diglossia as an open challenge.
+  \item \textbf{Tax-domain failure}: all metrics are zero due to a domain
+        taxonomy mismatch (articles stored as \texttt{civil}, queried as
+        \texttt{tax}).
+  \item \textbf{Latency}: 13--14 seconds total, bottlenecked by the remote
+        Cloudflare-tunnel embedding service.
+  \item \textbf{Corpus coverage}: limited to 7 legal domains; full coverage
+        of Moroccan law requires additional computational resources.
+\end{enumerate}
+
+\subsection{Future Work}
+
+Several directions are planned: (1) embedding fine-tuning on the Moroccan
+legal corpus to reduce the Darija--MSA gap; (2) local embedding deployment to
+reduce latency from $\sim$5.5\,s to $\sim$100\,ms; (3) LLM-as-judge evaluation
+for more accurate faithfulness measurement; (4) extension of the corpus to
+cover the complete Moroccan Official Bulletin; (5) multi-turn conversational
+support with context memory; and (6) an upgrade to Gemma 4 9B (or equivalent)
+for improved generation quality.

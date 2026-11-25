@@ -1,0 +1,91 @@
+% =============================================================================
+%  Moroccan Legal Q&A System based on RAG with Arabic NLP
+%  Springer LNCS proceedings format  (splnproc2510 / llncs class)
+%
+%  Compile (command line):
+%      pdflatex main
+%      bibtex   main
+%      pdflatex main
+%      pdflatex main
+%
+%  Or: upload this whole folder to Overleaf (www.overleaf.com) and compile
+%  with the default pdfLaTeX engine -- the llncs.cls and splncs04.bst files
+%  are already included.
+%
+%  NOTE: Replace the placeholder authors / affiliation / email below with the
+%  actual ICCT2026 submission metadata before final submission.
+% =============================================================================
+
+\documentclass[runningheads]{llncs}
+
+% --- Packages ---------------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{array}
+\usepackage{multirow}
+
+\begin{document}
+
+% --- Title -------------------------------------------------------------------
+\title{Moroccan Legal Question Answering System Based on Retrieval-Augmented
+Generation (RAG) with Arabic Natural Language Processing}
+% \titlerunning{Moroccan Legal QA System Based on RAG}  % optional short title
+
+% --- Authors (REPLACE with the real ICCT2026 authors) ------------------------
+\author{Author One\orcidID{0000-0000-0000-0000}
+        \and
+        Author Two\orcidID{0000-0000-0000-0000}
+        \and
+        Author Three\orcidID{0000-0000-0000-0000}}
+\authorrunning{Author One et al.}
+
+\institute{Faculty of Sciences and Techniques of Tangier,
+           Abdelmalek Essaadi University, Morocco\\
+           \email{firstname.lastname@etu.uae.ac.ma}}
+
+\maketitle
+
+% --- Abstract ----------------------------------------------------------------
+\begin{abstract}
+This paper presents the design, implementation, and evaluation of a legal
+Question Answering (Q\&A) system specialized in Moroccan law, based on the
+Retrieval-Augmented Generation (RAG) architecture. The system integrates a
+complete Arabic NLP pipeline including text extraction from PDF documents
+(digital and scanned), cleaning, Arabic normalization, structural analysis of
+legal articles, and vector indexing via PostgreSQL with the pgvector
+extension. Hybrid search combines dense cosine similarity (BAAI/bge-m3, 1024
+dimensions) with BM25 lexical search, fused through Reciprocal Rank Fusion
+(RRF). The generation module relies on Google's Gemma 4 2B model, served on
+GPU via Google Colab and exposed through a Cloudflare tunnel. Benchmarks show
+that the RRF strategy achieves a Hit@5 of 68.75\% and a Recall@5 of 59.38\%,
+while dense search offers the best MRR@5 (0.565). Embedding-model evaluation
+demonstrates the superiority of 1024-dimension models
+(\texttt{intfloat/multilingual-e5-large}, \texttt{BAAI/bge-m3}) for Arabic
+legal text, with domain accuracy reaching 89\%. This work constitutes the
+first complete open-source Moroccan legal RAG platform, covering seven areas
+of law (criminal, traffic, family, civil, commercial, judicial, tax).
+\end{abstract}
+
+\keywords{RAG \and Arabic NLP \and Moroccan Law \and Hybrid Search \and
+Multilingual Embeddings \and pgvector \and Gemma 4 \and Legal Question
+Answering \and Reciprocal Rank Fusion}
+
+% --- Body --------------------------------------------------------------------
+\input{sections/01_introduction}
+\input{sections/02_related_works}
+\input{sections/03_methodology}
+\input{sections/04_proposed_solution}
+\input{sections/05_results}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+
+% --- Bibliography -------------------------------------------------------------
+\bibliographystyle{splncs04}
+\bibliography{references}
+
+\end{document}
