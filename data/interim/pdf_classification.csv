@@ -1,0 +1,12 @@
+file,classification,total_pages,avg_text_length,text_page_ratio,image_page_ratio,processing_status,error_reason
+data/raw/3_TradeRecord_ar-MA.pdf,digital,233,1542.46,0.9914,0.9957,success,
+data/raw/3-القانون-رقم-5.96-المتعلق-بشركة-التضامن-وشركة-التوصية-البسيطة.pdf,digital,34,2208.62,1.0,0.0294,success,
+data/raw/BO_7108_Ar-التنظيم-القضائي-38.15.pdf,digital,18,2816.11,1.0,0.0,success,
+data/raw/code-civil-marocain-ar.pdf,digital,133,3113.44,1.0,0.0,success,
+data/raw/code-de-la-route-marocain-ar.pdf,digital,154,2112.32,0.9935,1.0,success,
+data/raw/code-penal-maroc-ar.pdf,digital,485,1701.06,0.9876,0.0103,success,
+data/raw/constitution_marocaine_2011-ar.pdf,digital,82,1623.5,0.9634,0.0,success,
+data/raw/sanction-code-penal-marocain-ar.pdf,digital,117,2078.56,1.0,0.0,success,
+data/raw/المدونة-العامة-للضرائب-2024.pdf,digital,764,1570.24,0.9987,0.0026,success,
+data/raw/مدونة الشغل.pdf,digital,171,1648.22,0.9942,1.0,success,
+data/raw/مرسوم-رقم-2.23.665-بتحديد-الخريطة-القضائية-للمملكة.pdf,digital,171,333.32,1.0,0.0,success,
