@@ -1,0 +1,92 @@
+# ============================================
+# Moroccan Legal RAG - Custom PostgreSQL Image
+# ============================================
+# Base: PostgreSQL 16 (official image)
+# Adds: pgvector, pg_trgm, Arabic locale, custom configs
+# ============================================
+
+FROM postgres:16
+
+# Build arguments (can be overridden at build time)
+ARG PG_MAJOR=16
+ARG PGVECTOR_VERSION=0.7.4
+
+# --------------------------------------------
+# Install system dependencies
+# --------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Build tools for pgvector compilation
+    build-essential \
+    postgresql-server-dev-${PG_MAJOR} \
+    git \
+    # Locale support
+    locales \
+    locales-all \
+    # Useful utilities
+    ca-certificates \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# --------------------------------------------
+# Generate Arabic and French locales
+# --------------------------------------------
+RUN echo "ar_SA.UTF-8 UTF-8" >> /etc/locale.gen \
+    && echo "ar_MA.UTF-8 UTF-8" >> /etc/locale.gen \
+    && echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen \
+    && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen
+
+# Set default locale
+ENV LANG=en_US.UTF-8
+ENV LC_COLLATE=en_US.UTF-8
+ENV LC_CTYPE=en_US.UTF-8
+
+# --------------------------------------------
+# Install pgvector from source
+# --------------------------------------------
+RUN git clone --branch v${PGVECTOR_VERSION} https://github.com/pgvector/pgvector.git \
+    && cd pgvector \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -rf pgvector
+
+# --------------------------------------------
+# Install additional PostgreSQL extensions
+# --------------------------------------------
+# pg_trgm and unaccent are included in postgres:16 image (contrib)
+# Just enable them in init script
+
+# --------------------------------------------
+# Clean up build dependencies (keep runtime libs)
+# --------------------------------------------
+RUN apt-get remove -y build-essential postgresql-server-dev-${PG_MAJOR} git \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# --------------------------------------------
+# Create directories for custom configs and init scripts
+# --------------------------------------------
+RUN mkdir -p /docker-entrypoint-initdb.d \
+    && mkdir -p /etc/postgresql/custom
+
+# --------------------------------------------
+# Copy custom PostgreSQL configuration
+# --------------------------------------------
+# Uncomment the line below after creating docker/postgresql.conf
+COPY docker/config/postgresql.conf /etc/postgresql/custom/postgresql.conf
+
+# --------------------------------------------
+# Health check
+# --------------------------------------------
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=10s \
+    CMD pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}
+
+# --------------------------------------------
+# Labels
+# --------------------------------------------
+LABEL maintainer="Moroccan Legal RAG Team"
+LABEL description="PostgreSQL 16 with pgvector 0.7.4, pg_trgm, Arabic/French locale support"
+LABEL version="1.0.0"
+LABEL project="moroccan-legal-rag"

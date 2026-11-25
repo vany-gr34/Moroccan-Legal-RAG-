@@ -1,0 +1,10 @@
+normalization:
+  unify_alef: true
+  remove_tatweel: true
+  remove_diacritics: true
+  preserve_shadda: false          # set true if shadda changes legal meaning
+  unify_digits: true              # convert Arabic-Indic digits to ASCII
+  normalize_spaces: true
+  fix_punctuation_spacing: true
+  remove_control_chars: true
+  normalization_form: "NFKC"      # or "NFC"

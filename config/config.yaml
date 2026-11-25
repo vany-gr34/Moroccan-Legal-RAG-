@@ -1,0 +1,9 @@
+pdf_classifier:
+  text_threshold: 100      # Min chars per page to consider text-heavy
+  text_page_ratio: 0.9     # Ratio of text-heavy pages to classify as digital
+  image_page_ratio: 0.9    # Ratio of image-heavy pages to classify as scanned
+
+embedding:
+  model_name: BAAI/bge-m3
+  # Optional. If empty, EMBEDDING_SERVICE_URL env var (if set) is used.
+  service_url: ""

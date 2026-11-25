@@ -1,0 +1,125 @@
+# ============================================
+# Moroccan Legal RAG - Docker Compose
+# ============================================
+# Usage:
+#   docker-compose build              # Build custom image
+#   docker-compose up -d              # Start PostgreSQL
+#   docker-compose down               # Stop (data persists)
+#   docker-compose down -v            # Stop and DELETE all data
+#   docker-compose logs -f postgres   # Follow logs
+# ============================================
+
+services:
+  postgres:
+    # Build custom image
+    build:
+      # context: .
+      dockerfile: docker/Dockerfile.postgres
+      args:
+        PG_MAJOR: 16
+        PGVECTOR_VERSION: 0.7.4
+    image: moroccan-legal-rag-db:latest
+    container_name: legal-rag-postgres
+    restart: unless-stopped
+
+    # Environment
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-legal_rag}
+      POSTGRES_USER: ${POSTGRES_USER:-legal_rag_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-legal_rag_pass}
+      # Use C.UTF-8 as init locale (Arabic data still works fine)
+      POSTGRES_INITDB_ARGS: "--locale=C.UTF-8 --encoding=UTF8"
+
+    # Ports
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    # Volumes
+    volumes:
+      # Persistent data
+      - postgres_data:/var/lib/postgresql/data
+      # Init scripts (runs only on first start)
+      - ./database/init_db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      # Custom config (optional - uncomment when postgresql.conf exists)
+      # - ./docker/postgresql.conf:/etc/postgresql/custom/postgresql.conf:ro
+
+      # Health check
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-legal_rag_user} -d ${POSTGRES_DB:-legal_rag}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+    # Networks
+    networks:
+      - legal-rag-network
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    networks:
+      - legal-rag-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # ── Gemma 4 LLM Microservice ───────────────────────────────────────────────
+  llm:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.llm
+    image: moroccan-legal-rag-llm:latest
+    container_name: legal-rag-llm
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      # Cache for downloaded GGUF model
+      - llama_cache:/root/.cache/llama.cpp
+    environment:
+      LLAMA_N_GPU_LAYERS: "${LLAMA_N_GPU_LAYERS:-0}"
+    # ── Uncomment for GPU passthrough ──
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8001/health', timeout=5)" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 300s
+      retries: 3
+    networks:
+      - legal-rag-network
+
+# Volumes
+volumes:
+  llama_cache:
+  postgres_data:
+    name: legal_rag_postgres_data
+    driver: local
+  pgadmin_data:
+
+    # Networks
+networks:
+  legal-rag-network:
+    name: legal_rag_network
+    driver: bridge

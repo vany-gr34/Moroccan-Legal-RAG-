@@ -1,0 +1,33 @@
+# Cleaning configuration for Moroccan legal texts
+
+character_deduplication: true
+
+page_numbers:
+  enabled: true
+  patterns:
+    - "^-\\s*\\d{1,4}\\s*-$"
+    - "^\\s*\\d{1,4}\\s*$"
+
+table_of_contents:
+  enabled: true
+  min_lines: 6
+  dotted_leader_pattern: "\\.{3,}\\s*\\d+\\s*$"
+
+headers_footers:
+  enabled: true
+  repetition_threshold: 0.7
+  min_occurrences: 3
+
+duplicates:
+  enabled: true
+  similarity_threshold: 0.85
+
+watermarks:
+  enabled: true
+  patterns:
+    - "نسخة (?:غير|غير)? ?قابلة للبيع"
+    - "ملكية (?:عامة|خاصة)"
+    - "جميع الحقوق محفوظة"
+    - "©.*\\d{4}"
+
+min_block_length: 10

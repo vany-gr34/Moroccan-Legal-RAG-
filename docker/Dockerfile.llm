@@ -1,0 +1,82 @@
+# ============================================
+# Moroccan Legal RAG - Gemma4 LLM Microservice
+# ============================================
+# Build:
+#   docker build -f docker/Dockerfile.llm -t moroccan-legal-rag-llm:latest .
+#
+# Run (CPU):
+#   docker run --rm -p 8001:8001 \
+#     -v llama-cache:/root/.cache/llama.cpp \
+#     moroccan-legal-rag-llm:latest
+#
+# Run (with GPU passthrough):
+#   docker run --rm --gpus all -p 8001:8001 \
+#     -v llama-cache:/root/.cache/llama.cpp \
+#     moroccan-legal-rag-llm:latest
+# ============================================
+
+# ── Stage 1: Build llama.cpp ────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+LABEL org.opencontainers.image.title="Moroccan Legal RAG - Gemma4 LLM"
+LABEL org.opencontainers.image.description="Gemma 4 LLM microservice for Moroccan Legal RAG"
+
+ARG LLAMA_CPP_VERSION=b4819
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    curl \
+    git \
+    libcurl4-openssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone llama.cpp at a pinned tag
+RUN git clone --depth 1 --branch ${LLAMA_CPP_VERSION} \
+    https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+
+WORKDIR /tmp/llama.cpp/build
+
+# Build llama-server — CPU only
+# For GPU support, add -DGGML_CUDA=ON
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release \
+    -DGGML_NATIVE=OFF \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DLLAMA_SERVER=ON && \
+    cmake --build . --target llama-server -- -j$(nproc)
+
+# ── Stage 2: Runtime image ──────────────────────────────────────────────────
+FROM python:3.11-slim
+
+# Runtime system deps — libgomp1 (OpenMP) + libcurl4 (HF downloads)
+RUN apt-get update && apt-get install -y \
+    wget \
+    libgomp1 \
+    libcurl4 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install llama-server system-wide (from builder)
+COPY --from=builder /tmp/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server
+
+# Python web dependencies
+RUN pip install --no-cache-dir \
+    fastapi==0.136.3 \
+    uvicorn \
+    pydantic \
+    requests
+
+# Copy the service
+COPY src/services/gemma4_llm.py /app/gemma4_llm.py
+
+WORKDIR /app
+
+# 8001 = FastAPI (public), 8081 = llama-server (internal only)
+EXPOSE 8001
+
+# Volume for downloaded GGUF model cache
+VOLUME /root/.cache/llama.cpp
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8001/health', timeout=5)" || exit 1
+
+CMD ["python", "gemma4_llm.py"]
